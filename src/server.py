@@ -604,5 +604,203 @@ def set_checkbox(element_id: str, state: bool) -> str:
         return error_msg
 
 
+@mcp.tool()
+def get_vertical_scrollbar_position(element_id: str) -> dict:
+    """
+    Get the current position of the vertical scrollbar in an SAP GUI grid control.
+
+    Args:
+        element_id: The ID of the grid shell element
+
+    Returns:
+        Dictionary containing the vertical scrollbar position
+    """
+    if not element_id:
+        return {"error": "No element ID specified."}
+
+    session = sap_session()
+    if not session:
+        return {"error": "No current session available."}
+
+    try:
+        grid = session.findById(element_id)
+        if not grid:
+            return {"error": f"No grid found with ID: {element_id}"}
+
+        scrollbar_position = grid.VerticalScrollbar.Position
+        return {"success": True, "scrollbar_position": scrollbar_position}
+
+    except Exception as e:
+        return {"error": str(e), "message": "Failed to get vertical scrollbar position"}
+
+
+@mcp.tool()
+def set_vertical_scrollbar_position(element_id: str, position: int) -> dict:
+    """
+    Set the position of the vertical scrollbar in an SAP GUI grid control.
+
+    Args:
+        element_id: The ID of the grid shell element
+        position: The desired scrollbar position
+
+    Returns:
+        Dictionary indicating success or failure
+    """
+    if not element_id:
+        return {"error": "No element ID specified."}
+
+    session = sap_session()
+    if not session:
+        return {"error": "No current session available."}
+
+    try:
+        grid = session.findById(element_id)
+        if not grid:
+            return {"error": f"No grid found with ID: {element_id}"}
+
+        grid.VerticalScrollbar.Position = position
+        return {"success": True}
+
+    except Exception as e:
+        return {"error": str(e), "message": "Failed to set vertical scrollbar position"}
+
+
+def get_horizontal_scrollbar_position(element_id: str) -> dict:
+    """
+    Get the current position of the horizontal scrollbar in an SAP GUI grid control.
+
+    Args:
+        element_id: The ID of the grid shell element
+
+    Returns:
+        Dictionary containing the horizontal scrollbar position
+    """
+    if not element_id:
+        return {"error": "No element ID specified."}
+
+    session = sap_session()
+    if not session:
+        return {"error": "No current session available."}
+
+    try:
+        grid = session.findById(element_id)
+        if not grid:
+            return {"error": f"No grid found with ID: {element_id}"}
+
+        scrollbar_position = grid.HorizontalScrollbar.Position
+        return {"success": True, "scrollbar_position": scrollbar_position}
+
+    except Exception as e:
+        return {"error": str(e), "message": "Failed to get horizontal scrollbar position"}
+
+
+@mcp.tool()
+def set_horizontal_scrollbar_position(element_id: str, position: int) -> dict:
+    """
+    Set the position of the horizontal scrollbar in an SAP GUI grid control.
+
+    Args:
+        element_id: The ID of the grid shell element
+        position: The desired scrollbar position
+
+    Returns:
+        Dictionary indicating success or failure
+    """
+    if not element_id:
+        return {"error": "No element ID specified."}
+
+    session = sap_session()
+    if not session:
+        return {"error": "No current session available."}
+
+    try:
+        grid = session.findById(element_id)
+        if not grid:
+            return {"error": f"No grid found with ID: {element_id}"}
+
+        grid.HorizontalScrollbar.Position = position
+        return {"success": True}
+
+    except Exception as e:
+        return {"error": str(e), "message": "Failed to set horizontal scrollbar position"}
+
+
+@mcp.tool()
+def maximize_window() -> str:
+    """Maximize the current SAP GUI window."""
+    _current_session = sap_session()
+    if not _current_session:
+        error_msg = "No current session available. Cannot maximize window."
+        logger.error(error_msg)
+        return error_msg
+    try:
+        _current_window = _current_session.ActiveWindow
+        if not _current_window:
+            error_msg = "No active window found in the current session."
+            logger.error(error_msg)
+            return error_msg
+        _current_window.Maximize()
+        logger.info("Maximized the current SAP GUI window.")
+        return "Maximized the current SAP GUI window."
+    except Exception as e:
+        error_msg = f"Failed to maximize window: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+@mcp.tool()
+def set_focus(element_id: str) -> str:
+    """Set focus to a GUI element by its ID."""
+    if not element_id:
+        error_msg = "No element ID specified."
+        logger.error(error_msg)
+        return error_msg
+    _current_session = sap_session()
+    if not _current_session:
+        error_msg = "No current session available. Cannot set focus."
+        logger.error(error_msg)
+        return error_msg
+    try:
+        _element = _current_session.FindById(element_id)
+        if not _element:
+            error_msg = f"No element found with ID: {element_id}"
+            logger.error(error_msg)
+            return error_msg
+        _element.SetFocus()
+        logger.info(f"Set focus to element with ID: {element_id}")
+        return f"Set focus to element with ID: {element_id}"
+    except Exception as e:
+        error_msg = f"Failed to set focus for element ID '{element_id}': {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+@mcp.tool()
+def set_combobox(element_id: str, key: str) -> str:
+    """Set the value of a combo box element by its ID."""
+    if not element_id:
+        error_msg = "No element ID specified."
+        logger.error(error_msg)
+        return error_msg
+    _current_session = sap_session()
+    if not _current_session:
+        error_msg = "No current session available. Cannot set combo box."
+        logger.error(error_msg)
+        return error_msg
+    try:
+        _element = _current_session.FindById(element_id)
+        if not _element:
+            error_msg = f"No element found with ID: {element_id}"
+            logger.error(error_msg)
+            return error_msg
+        _element.Key = key
+        logger.info(f"Set combo box with element ID {element_id} to key='{key}'")
+        return f"Set combo box with element ID {element_id} to key='{key}'"
+    except Exception as e:
+        error_msg = f"Failed to set combo box with element ID '{element_id}': {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")
