@@ -577,5 +577,32 @@ def double_click_grid_cell(element_id: str, row: int, column: int) -> dict:
         return {"error": str(e), "message": f"Failed to double-click cell at row {row}, column {column}"}
 
 
+@mcp.tool()
+def set_checkbox(element_id: str, state: bool) -> str:
+    """Set the state of a checkbox element by its ID."""
+    if not element_id:
+        error_msg = "No element ID specified."
+        logger.error(error_msg)
+        return error_msg
+    _current_session = sap_session()
+    if not _current_session:
+        error_msg = "No current session available. Cannot set checkbox."
+        logger.error(error_msg)
+        return error_msg
+    try:
+        _element = _current_session.FindById(element_id)
+        if not _element:
+            error_msg = f"No element found with ID: {element_id}"
+            logger.error(error_msg)
+            return error_msg
+        _element.Selected = state
+        logger.info(f"Set checkbox with element ID {element_id} to state={state}")
+        return f"Set checkbox with element ID {element_id} to state={state}"
+    except Exception as e:
+        error_msg = f"Failed to set checkbox with element ID '{element_id}': {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")
