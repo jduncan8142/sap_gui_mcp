@@ -1,0 +1,12 @@
+[project]
+name = "sap-gui-mcp"
+version = "0.1.0"
+description = "MCP server for SAP GUI that uses FastMCP and SAP GUI Scripting API"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastmcp>=2.12.3",
+    "python-dotenv>=1.1.1",
+    "pywin32>=311",
+    "setuptools>=80.9.0",
+]
