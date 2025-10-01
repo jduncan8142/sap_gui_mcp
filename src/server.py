@@ -4,7 +4,6 @@ from typing import Optional
 import json
 import win32com.client
 from dotenv import load_dotenv
-import os
 
 # Load environment variables
 load_dotenv()
