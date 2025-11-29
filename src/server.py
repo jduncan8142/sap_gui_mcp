@@ -23,6 +23,7 @@ def create_sap_session(
     password: str,
     language: str = "EN",
     max_wait_time: int = 30,
+    login_wait_time: int = 10,
 ) -> Optional[win32com.client.CDispatch]:
     """
     Create a new SAP session by logging in with credentials.
@@ -34,6 +35,7 @@ def create_sap_session(
         password: SAP password
         language: SAP language code (default: "EN")
         max_wait_time: Maximum time to wait for connection in seconds (default: 30)
+        login_wait_time: Maximum time to wait for login window and completion in seconds (default: 10)
 
     Returns:
         SAP session object if successful, None otherwise
@@ -76,8 +78,21 @@ def create_sap_session(
 
         # Fill in login credentials
         try:
-            # Wait for login window to appear
-            time.sleep(1)
+            # Wait for login window to appear using polling approach
+            # Poll every 0.5 seconds for the login window to be ready
+            login_start_time = time.time()
+            login_window_ready = False
+            while (time.time() - login_start_time) < login_wait_time:
+                try:
+                    session.FindById("wnd[0]/usr/txtRSYST-MANDT")
+                    login_window_ready = True
+                    break
+                except Exception:
+                    time.sleep(0.5)
+
+            if not login_window_ready:
+                logger.error("Login window did not appear within timeout period.")
+                return None
 
             # Find and fill login fields
             # Standard SAP login screen field IDs
@@ -89,19 +104,22 @@ def create_sap_session(
             # Press Enter to login
             session.FindById("wnd[0]").SendVKey(0)  # VKey 0 = Enter
 
-            # Wait for login to complete
-            time.sleep(2)
+            # Wait for login to complete using polling approach
+            # Poll every 0.5 seconds to check if we've moved past the login screen
+            login_complete_start = time.time()
+            while (time.time() - login_complete_start) < login_wait_time:
+                try:
+                    # If we can still find the password field, login not complete yet
+                    session.FindById("wnd[0]/usr/pwdRSYST-BCODE")
+                    time.sleep(0.5)
+                except Exception:
+                    # Password field not found = we've moved past login screen = success
+                    logger.info(f"Successfully logged in to {system} as {user}")
+                    return session
 
-            # Check if login was successful by verifying we're not still on login screen
-            try:
-                # If we can still find the password field, login failed
-                session.FindById("wnd[0]/usr/pwdRSYST-BCODE")
-                logger.error("Login failed - still on login screen. Check credentials.")
-                return None
-            except Exception:
-                # Password field not found = we've moved past login screen = success
-                logger.info(f"Successfully logged in to {system} as {user}")
-                return session
+            # If we exit the loop, we're still on login screen after timeout
+            logger.error("Login failed - still on login screen after timeout. Check credentials.")
+            return None
 
         except Exception as login_error:
             logger.error(f"Error during login process: {str(login_error)}")
