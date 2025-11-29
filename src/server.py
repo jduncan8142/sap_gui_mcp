@@ -254,11 +254,11 @@ def login_to_sap(
         Success message with session info or error message
     """
     # Use environment variables if parameters not provided
-    sap_system = system or os.getenv("SAP_SYSTEM")
-    sap_client = client or os.getenv("SAP_CLIENT")
-    sap_user = user or os.getenv("SAP_USER")
-    sap_password = password or os.getenv("SAP_PASSWORD")
-    sap_language = language or os.getenv("SAP_LANGUAGE", "EN")
+    sap_system = system if system is not None else os.getenv("SAP_SYSTEM")
+    sap_client = client if client is not None else os.getenv("SAP_CLIENT")
+    sap_user = user if user is not None else os.getenv("SAP_USER")
+    sap_password = password if password is not None else os.getenv("SAP_PASSWORD")
+    sap_language = language if language is not None else os.getenv("SAP_LANGUAGE", "EN")
 
     # Validate all required credentials are available
     if not all([sap_system, sap_client, sap_user, sap_password]):
