@@ -65,7 +65,9 @@ def create_sap_session(
 
         # Wait for connection to be established
         start_time = time.time()
-        while not connection.Sessions and (time.time() - start_time) < max_wait_time:
+        # Poll every 0.5 seconds for a session to be established.
+        # 0.5s interval chosen to balance responsiveness and resource usage for SAP GUI connection.
+        while (len(connection.Sessions) == 0) and (time.time() - start_time) < max_wait_time:
             time.sleep(0.5)
 
         if not connection.Sessions:
