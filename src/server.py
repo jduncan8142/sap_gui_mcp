@@ -98,7 +98,7 @@ def create_sap_session(
                 session.FindById("wnd[0]/usr/pwdRSYST-BCODE")
                 logger.error("Login failed - still on login screen. Check credentials.")
                 return None
-            except:
+            except Exception:
                 # Password field not found = we've moved past login screen = success
                 logger.info(f"Successfully logged in to {system} as {user}")
                 return session
