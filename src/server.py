@@ -15,6 +15,9 @@ mcp = FastMCP("SAP GUI MCP Server")
 
 logger = logging.getLogger(__name__)
 
+# Polling interval for SAP GUI operations (in seconds)
+POLLING_INTERVAL = 0.5
+
 
 def create_sap_session(
     system: str,
@@ -68,7 +71,7 @@ def create_sap_session(
         # Wait for connection to be established
         start_time = time.time()
         while not connection.Sessions and (time.time() - start_time) < max_wait_time:
-            time.sleep(0.5)
+            time.sleep(POLLING_INTERVAL)
 
         if not connection.Sessions:
             logger.error("Connection established but no session created.")
@@ -79,7 +82,6 @@ def create_sap_session(
         # Fill in login credentials
         try:
             # Wait for login window to appear using polling approach
-            # Poll every 0.5 seconds for the login window to be ready
             login_start_time = time.time()
             login_window_ready = False
             while (time.time() - login_start_time) < login_wait_time:
@@ -88,7 +90,7 @@ def create_sap_session(
                     login_window_ready = True
                     break
                 except Exception:
-                    time.sleep(0.5)
+                    time.sleep(POLLING_INTERVAL)
 
             if not login_window_ready:
                 logger.error("Login window did not appear within timeout period.")
@@ -105,13 +107,12 @@ def create_sap_session(
             session.FindById("wnd[0]").SendVKey(0)  # VKey 0 = Enter
 
             # Wait for login to complete using polling approach
-            # Poll every 0.5 seconds to check if we've moved past the login screen
             login_complete_start = time.time()
             while (time.time() - login_complete_start) < login_wait_time:
                 try:
                     # If we can still find the password field, login not complete yet
                     session.FindById("wnd[0]/usr/pwdRSYST-BCODE")
-                    time.sleep(0.5)
+                    time.sleep(POLLING_INTERVAL)
                 except Exception:
                     # Password field not found = we've moved past login screen = success
                     logger.info(f"Successfully logged in to {system} as {user}")
