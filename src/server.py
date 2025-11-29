@@ -2,6 +2,8 @@ from fastmcp import FastMCP
 import logging
 from typing import Optional
 import json
+import os
+import time
 import win32com.client
 from dotenv import load_dotenv
 
@@ -14,21 +16,175 @@ mcp = FastMCP("SAP GUI MCP Server")
 logger = logging.getLogger(__name__)
 
 
-def sap_session() -> Optional[win32com.client.CDispatch]:
-    """Get the current SAP session."""
-    sap_gui = win32com.client.GetObject("SAPGUI")
-    if not sap_gui:
-        logger.error("SAP GUI is not running.")
+def create_sap_session(
+    system: str,
+    client: str,
+    user: str,
+    password: str,
+    language: str = "EN",
+    max_wait_time: int = 30,
+) -> Optional[win32com.client.CDispatch]:
+    """
+    Create a new SAP session by logging in with credentials.
+
+    Args:
+        system: SAP system ID (e.g., "PRD", "DEV")
+        client: SAP client number (e.g., "100")
+        user: SAP username
+        password: SAP password
+        language: SAP language code (default: "EN")
+        max_wait_time: Maximum time to wait for connection in seconds (default: 30)
+
+    Returns:
+        SAP session object if successful, None otherwise
+    """
+    try:
+        # Get SAP GUI Scripting object
+        sap_gui = win32com.client.GetObject("SAPGUI")
+        if not sap_gui:
+            logger.error("SAP GUI is not running. Please start SAP GUI first.")
+            return None
+
+        sap_application = sap_gui.GetScriptingEngine
+        if not sap_application:
+            logger.error("Failed to get SAP Scripting Engine.")
+            return None
+
+        # Build connection string
+        # Format: /H/<host>/S/<service> or system description
+        # For SAP Logon pad connections, we use the system ID directly
+        connection_string = system
+
+        # Open connection
+        logger.info(f"Attempting to connect to SAP system: {system}")
+        connection = sap_application.OpenConnection(connection_string, True)
+
+        if not connection:
+            logger.error(f"Failed to open connection to system: {system}")
+            return None
+
+        # Wait for connection to be established
+        start_time = time.time()
+        while not connection.Sessions and (time.time() - start_time) < max_wait_time:
+            time.sleep(0.5)
+
+        if not connection.Sessions:
+            logger.error("Connection established but no session created.")
+            return None
+
+        session = connection.Sessions[0]
+
+        # Fill in login credentials
+        try:
+            # Wait for login window to appear
+            time.sleep(1)
+
+            # Find and fill login fields
+            # Standard SAP login screen field IDs
+            session.FindById("wnd[0]/usr/txtRSYST-MANDT").Text = client
+            session.FindById("wnd[0]/usr/txtRSYST-BNAME").Text = user
+            session.FindById("wnd[0]/usr/pwdRSYST-BCODE").Text = password
+            session.FindById("wnd[0]/usr/txtRSYST-LANGU").Text = language
+
+            # Press Enter to login
+            session.FindById("wnd[0]").SendVKey(0)  # VKey 0 = Enter
+
+            # Wait for login to complete
+            time.sleep(2)
+
+            # Check if login was successful by verifying we're not still on login screen
+            try:
+                # If we can still find the password field, login failed
+                session.FindById("wnd[0]/usr/pwdRSYST-BCODE")
+                logger.error("Login failed - still on login screen. Check credentials.")
+                return None
+            except:
+                # Password field not found = we've moved past login screen = success
+                logger.info(f"Successfully logged in to {system} as {user}")
+                return session
+
+        except Exception as login_error:
+            logger.error(f"Error during login process: {str(login_error)}")
+            return None
+
+    except Exception as e:
+        logger.error(f"Failed to create SAP session: {str(e)}")
         return None
-    sap_application = sap_gui.GetScriptingEngine
-    if not sap_application.Connections:
-        logger.error("No SAP connections found.")
+
+
+def sap_session(auto_login: bool = False) -> Optional[win32com.client.CDispatch]:
+    """
+    Get the current SAP session, optionally creating one if it doesn't exist.
+
+    Args:
+        auto_login: If True, attempt to create a new session using environment credentials
+                   when no existing session is found (default: False)
+
+    Returns:
+        SAP session object if available or created, None otherwise
+    """
+    try:
+        sap_gui = win32com.client.GetObject("SAPGUI")
+        if not sap_gui:
+            logger.error("SAP GUI is not running.")
+            return None
+
+        sap_application = sap_gui.GetScriptingEngine
+        if not sap_application:
+            logger.error("Failed to get SAP Scripting Engine.")
+            return None
+
+        # Check for existing connections and sessions
+        if sap_application.Connections and sap_application.Connections.Count > 0:
+            connection = sap_application.Connections[0]
+            if connection.Sessions and connection.Sessions.Count > 0:
+                # Existing session found
+                return connection.Sessions[0]
+
+        # No existing session found
+        if not auto_login:
+            logger.error("No SAP connections or sessions found.")
+            return None
+
+        # Attempt auto-login using environment credentials
+        logger.info("No existing session found. Attempting auto-login...")
+
+        # Get credentials from environment variables
+        sap_system = os.getenv("SAP_SYSTEM")
+        sap_client = os.getenv("SAP_CLIENT")
+        sap_user = os.getenv("SAP_USER")
+        sap_password = os.getenv("SAP_PASSWORD")
+        sap_language = os.getenv("SAP_LANGUAGE", "EN")
+
+        # Validate credentials are available
+        if not all([sap_system, sap_client, sap_user, sap_password]):
+            missing = []
+            if not sap_system:
+                missing.append("SAP_SYSTEM")
+            if not sap_client:
+                missing.append("SAP_CLIENT")
+            if not sap_user:
+                missing.append("SAP_USER")
+            if not sap_password:
+                missing.append("SAP_PASSWORD")
+
+            logger.error(
+                f"Auto-login failed: Missing required environment variables: {', '.join(missing)}"
+            )
+            return None
+
+        # Create new session
+        return create_sap_session(
+            system=sap_system,
+            client=sap_client,
+            user=sap_user,
+            password=sap_password,
+            language=sap_language,
+        )
+
+    except Exception as e:
+        logger.error(f"Error in sap_session: {str(e)}")
         return None
-    connection = sap_application.Connections[0]
-    if not connection.Sessions:
-        logger.error("No SAP sessions found.")
-        return None
-    return connection.Sessions[0]
 
 
 def sap_object_tree_as_json(session: Optional[win32com.client.CDispatch]) -> dict:
@@ -71,6 +227,82 @@ def get_session_info() -> str:
         return json.dumps(info, indent=2)
     except Exception as e:
         error_msg = f"Failed to retrieve session information: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+@mcp.tool()
+def login_to_sap(
+    system: str = None,
+    client: str = None,
+    user: str = None,
+    password: str = None,
+    language: str = "EN",
+) -> str:
+    """
+    Create a new SAP session by logging in with credentials.
+    If credentials are not provided, they will be read from environment variables.
+
+    Args:
+        system: SAP system ID (e.g., "PRD", "DEV"). If None, uses SAP_SYSTEM env var.
+        client: SAP client number (e.g., "100"). If None, uses SAP_CLIENT env var.
+        user: SAP username. If None, uses SAP_USER env var.
+        password: SAP password. If None, uses SAP_PASSWORD env var.
+        language: SAP language code (default: "EN"). If None, uses SAP_LANGUAGE env var.
+
+    Returns:
+        Success message with session info or error message
+    """
+    # Use environment variables if parameters not provided
+    sap_system = system or os.getenv("SAP_SYSTEM")
+    sap_client = client or os.getenv("SAP_CLIENT")
+    sap_user = user or os.getenv("SAP_USER")
+    sap_password = password or os.getenv("SAP_PASSWORD")
+    sap_language = language or os.getenv("SAP_LANGUAGE", "EN")
+
+    # Validate all required credentials are available
+    if not all([sap_system, sap_client, sap_user, sap_password]):
+        missing = []
+        if not sap_system:
+            missing.append("system (SAP_SYSTEM)")
+        if not sap_client:
+            missing.append("client (SAP_CLIENT)")
+        if not sap_user:
+            missing.append("user (SAP_USER)")
+        if not sap_password:
+            missing.append("password (SAP_PASSWORD)")
+
+        error_msg = f"Login failed: Missing required parameters: {', '.join(missing)}"
+        logger.error(error_msg)
+        return error_msg
+
+    # Attempt to create session
+    session = create_sap_session(
+        system=sap_system,
+        client=sap_client,
+        user=sap_user,
+        password=sap_password,
+        language=sap_language,
+    )
+
+    if session:
+        try:
+            info = {
+                "Success": True,
+                "SessionId": session.Id,
+                "User": session.Info.User,
+                "Client": session.Info.Client,
+                "Language": session.Info.Language,
+                "SystemName": session.Info.SystemName,
+                "SystemNumber": session.Info.SystemNumber,
+            }
+            logger.info(f"Successfully created session for user {sap_user}")
+            return json.dumps(info, indent=2)
+        except Exception as e:
+            logger.warning(f"Session created but failed to retrieve info: {str(e)}")
+            return f"Session created successfully for user {sap_user}"
+    else:
+        error_msg = f"Failed to create SAP session for system {sap_system}. Check credentials and SAP GUI status."
         logger.error(error_msg)
         return error_msg
 
