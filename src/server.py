@@ -401,7 +401,7 @@ def get_grid_data(element_id: str) -> dict:
         session = sap_session()
         if not session:
             return {"error": "No current session available."}
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
 
         # Get grid dimensions
         row_count = grid.RowCount
@@ -450,7 +450,7 @@ def get_grid_cell_value(element_id: str, row: int, column: int) -> dict:
         session = sap_session()
         if not session:
             return {"error": "No current session available."}
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
 
         cell_value = grid.GetCellValue(row, column)
         column_title = grid.GetColumnTitle(column)
@@ -477,7 +477,7 @@ def select_grid_row(element_id: str, row: int) -> dict:
         session = sap_session()
         if not session:
             return {"error": "No current session available."}
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
 
         # Set current cell position to select the row
         grid.CurrentCellRow = row
@@ -504,7 +504,7 @@ def get_selected_grid_rows(element_id: str) -> dict:
         session = sap_session()
         if not session:
             return {"error": "No current session available."}
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
 
         # Get selected rows
         selected_rows_str = grid.SelectedRows
@@ -558,7 +558,7 @@ def double_click_grid_cell(element_id: str, row: int, column: int) -> dict:
         session = sap_session()
         if not session:
             return {"error": "No current session available."}
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
 
         # Set current cell and double-click
         grid.CurrentCellRow = row
@@ -622,7 +622,7 @@ def get_vertical_scrollbar_position(element_id: str) -> dict:
         return {"error": "No current session available."}
 
     try:
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
         if not grid:
             return {"error": f"No grid found with ID: {element_id}"}
 
@@ -653,7 +653,7 @@ def set_vertical_scrollbar_position(element_id: str, position: int) -> dict:
         return {"error": "No current session available."}
 
     try:
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
         if not grid:
             return {"error": f"No grid found with ID: {element_id}"}
 
@@ -683,7 +683,7 @@ def get_horizontal_scrollbar_position(element_id: str) -> dict:
         return {"error": "No current session available."}
 
     try:
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
         if not grid:
             return {"error": f"No grid found with ID: {element_id}"}
 
@@ -714,7 +714,7 @@ def set_horizontal_scrollbar_position(element_id: str, position: int) -> dict:
         return {"error": "No current session available."}
 
     try:
-        grid = session.findById(element_id)
+        grid = session.FindById(element_id)
         if not grid:
             return {"error": f"No grid found with ID: {element_id}"}
 
