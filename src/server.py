@@ -15,6 +15,9 @@ mcp = FastMCP("SAP GUI MCP Server")
 
 logger = logging.getLogger(__name__)
 
+# Polling interval for SAP GUI operations (in seconds)
+POLLING_INTERVAL = 0.5
+
 
 def create_sap_session(
     system: str,
@@ -70,7 +73,7 @@ def create_sap_session(
         # Wait for connection to be established
         start_time = time.time()
         while not connection.Sessions and (time.time() - start_time) < max_wait_time:
-            time.sleep(0.5)
+            time.sleep(POLLING_INTERVAL)
 
         if not connection.Sessions:
             logger.error("Connection established but no session created.")
@@ -262,11 +265,11 @@ def login_to_sap(
         Success message with session info or error message
     """
     # Use environment variables if parameters not provided
-    sap_system = system or os.getenv("SAP_SYSTEM")
-    sap_client = client or os.getenv("SAP_CLIENT")
-    sap_user = user or os.getenv("SAP_USER")
-    sap_password = password or os.getenv("SAP_PASSWORD")
-    sap_language = language or os.getenv("SAP_LANGUAGE", "EN")
+    sap_system = system if system is not None else os.getenv("SAP_SYSTEM")
+    sap_client = client if client is not None else os.getenv("SAP_CLIENT")
+    sap_user = user if user is not None else os.getenv("SAP_USER")
+    sap_password = password if password is not None else os.getenv("SAP_PASSWORD")
+    sap_language = language if language is not None else os.getenv("SAP_LANGUAGE", "EN")
 
     # Validate all required credentials are available
     if not all([sap_system, sap_client, sap_user, sap_password]):
