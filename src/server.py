@@ -26,7 +26,8 @@ def create_sap_session(
     password: str,
     language: str = "EN",
     max_wait_time: int = 30,
-    login_wait_time: int = 10,
+    login_window_wait_time: float = 1.0,
+    login_complete_wait_time: float = 2.0,
 ) -> Optional[win32com.client.CDispatch]:
     """
     Create a new SAP session by logging in with credentials.
@@ -38,7 +39,8 @@ def create_sap_session(
         password: SAP password
         language: SAP language code (default: "EN")
         max_wait_time: Maximum time to wait for connection in seconds (default: 30)
-        login_wait_time: Maximum time to wait for login window and completion in seconds (default: 10)
+        login_window_wait_time: Time to wait for login window to appear in seconds (default: 1.0)
+        login_complete_wait_time: Time to wait for login to complete in seconds (default: 2.0)
 
     Returns:
         SAP session object if successful, None otherwise
@@ -81,20 +83,8 @@ def create_sap_session(
 
         # Fill in login credentials
         try:
-            # Wait for login window to appear using polling approach
-            login_start_time = time.time()
-            login_window_ready = False
-            while (time.time() - login_start_time) < login_wait_time:
-                try:
-                    session.FindById("wnd[0]/usr/txtRSYST-MANDT")
-                    login_window_ready = True
-                    break
-                except Exception:
-                    time.sleep(POLLING_INTERVAL)
-
-            if not login_window_ready:
-                logger.error("Login window did not appear within timeout period.")
-                return None
+            # Wait for login window to appear
+            time.sleep(login_window_wait_time)
 
             # Find and fill login fields
             # Standard SAP login screen field IDs
@@ -106,21 +96,19 @@ def create_sap_session(
             # Press Enter to login
             session.FindById("wnd[0]").SendVKey(0)  # VKey 0 = Enter
 
-            # Wait for login to complete using polling approach
-            login_complete_start = time.time()
-            while (time.time() - login_complete_start) < login_wait_time:
-                try:
-                    # If we can still find the password field, login not complete yet
-                    session.FindById("wnd[0]/usr/pwdRSYST-BCODE")
-                    time.sleep(POLLING_INTERVAL)
-                except Exception:
-                    # Password field not found = we've moved past login screen = success
-                    logger.info(f"Successfully logged in to {system} as {user}")
-                    return session
+            # Wait for login to complete
+            time.sleep(login_complete_wait_time)
 
-            # If we exit the loop, we're still on login screen after timeout
-            logger.error("Login failed - still on login screen after timeout. Check credentials.")
-            return None
+            # Check if login was successful by verifying we're not still on login screen
+            try:
+                # If we can still find the password field, login failed
+                session.FindById("wnd[0]/usr/pwdRSYST-BCODE")
+                logger.error("Login failed - still on login screen. Check credentials.")
+                return None
+            except Exception:
+                # Password field not found = we've moved past login screen = success
+                logger.info(f"Successfully logged in to {system} as {user}")
+                return session
 
         except Exception as login_error:
             logger.error(f"Error during login process: {str(login_error)}")
@@ -257,6 +245,8 @@ def login_to_sap(
     user: str = None,
     password: str = None,
     language: str = "EN",
+    login_window_wait_time: float = 1.0,
+    login_complete_wait_time: float = 2.0,
 ) -> str:
     """
     Create a new SAP session by logging in with credentials.
@@ -268,6 +258,8 @@ def login_to_sap(
         user: SAP username. If None, uses SAP_USER env var.
         password: SAP password. If None, uses SAP_PASSWORD env var.
         language: SAP language code (default: "EN"). If None, uses SAP_LANGUAGE env var.
+        login_window_wait_time: Time to wait for login window to appear in seconds (default: 1.0).
+        login_complete_wait_time: Time to wait for login to complete in seconds (default: 2.0).
 
     Returns:
         Success message with session info or error message
@@ -302,6 +294,8 @@ def login_to_sap(
         user=sap_user,
         password=sap_password,
         language=sap_language,
+        login_window_wait_time=login_window_wait_time,
+        login_complete_wait_time=login_complete_wait_time,
     )
 
     if session:
