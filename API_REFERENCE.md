@@ -47,7 +47,81 @@ session_info = get_session_info()
 - `"No current session available."` - When SAP GUI is not running or no session exists
 - `"Failed to retrieve session information: <error>"` - When COM error occurs
 
-**Source**: `src/server.py:56`
+**Source**: `src/server.py:212`
+
+---
+
+### `login_to_sap()` ⭐ NEW
+
+**Description**: Creates a new SAP session by logging in with credentials. Enables automatic session creation without manual SAP GUI login.
+
+**Parameters**:
+- `system` (str, optional): SAP system ID (e.g., "PRD", "DEV", "QAS"). If None, uses `SAP_SYSTEM` environment variable
+- `client` (str, optional): SAP client number (e.g., "100", "200"). If None, uses `SAP_CLIENT` environment variable
+- `user` (str, optional): SAP username. If None, uses `SAP_USER` environment variable
+- `password` (str, optional): SAP password. If None, uses `SAP_PASSWORD` environment variable
+- `language` (str, optional): SAP language code (default: "EN"). If None, uses `SAP_LANGUAGE` environment variable
+
+**Returns**: JSON string containing session information or error message
+
+**Return Structure** (Success):
+```json
+{
+  "Success": true,
+  "SessionId": "ses[0]",
+  "User": "USERNAME",
+  "Client": "100",
+  "Language": "EN",
+  "SystemName": "PRD",
+  "SystemNumber": "00"
+}
+```
+
+**Example 1** (Using environment variables):
+```python
+# Requires .env file with SAP credentials configured
+result = login_to_sap()
+# Returns: Session info JSON
+```
+
+**Example 2** (Using explicit credentials):
+```python
+result = login_to_sap(
+    system="PRD",
+    client="100",
+    user="MYUSER",
+    password="MyPass123",
+    language="EN"
+)
+# Returns: Session info JSON
+```
+
+**Example 3** (Mixing environment and explicit):
+```python
+# Use env for most, override password only
+result = login_to_sap(password="DifferentPassword")
+# Uses SAP_SYSTEM, SAP_CLIENT, SAP_USER from .env, but provided password
+```
+
+**Error Returns**:
+- `"Login failed: Missing required parameters: <list>"` - When required credentials are not provided
+- `"Failed to create SAP session for system <system>..."` - When login fails (wrong credentials, system unavailable, etc.)
+- `"SAP GUI is not running. Please start SAP GUI first."` - When SAP GUI application is not running
+- `"Failed to open connection to system: <system>"` - When connection to SAP system fails
+
+**Prerequisites**:
+1. SAP GUI for Windows must be running
+2. SAP system must be configured in SAP Logon
+3. Valid credentials (either in `.env` or passed as parameters)
+4. SAP GUI Scripting must be enabled
+
+**Use Cases**:
+- Automated session creation for CI/CD pipelines
+- Recover from disconnected sessions
+- Create sessions without manual login
+- Test different user accounts programmatically
+
+**Source**: `src/server.py:234`
 
 ---
 
@@ -846,6 +920,7 @@ selected = get_selected_grid_rows(grid_id)
 | Category | Tool | Primary Use |
 |----------|------|-------------|
 | **Session** | `get_session_info()` | Verify connection |
+| | `login_to_sap()` ⭐ | Create session/login |
 | | `check_gui_busy()` | Wait for SAP |
 | **Navigation** | `start_transaction()` | Open transaction |
 | | `end_transaction()` | Close transaction |
@@ -870,4 +945,5 @@ selected = get_selected_grid_rows(grid_id)
 
 **API Version**: 0.1.0
 **Last Updated**: 2025-11-29
-**Total MCP Tools**: 26 exposed + 1 unexposed
+**Total MCP Tools**: 28 (all exposed)
+**Recent Additions**: login_to_sap() (auto-login capability), get_horizontal_scrollbar_position() (decorator fixed)

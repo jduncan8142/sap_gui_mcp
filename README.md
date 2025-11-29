@@ -85,15 +85,25 @@ This will automatically configure the MCP server to work with Claude Desktop, al
 
 ## Configuration
 
-1. **Create environment file (optional):**
-   Create a `.env` file in the project root for any environment-specific configuration:
+### Basic Setup
 
+1. **Create environment file (optional but recommended):**
+   Create a `.env` file in the project root based on `.env.example`:
+
+   ```bash
+   # SAP Credentials (used for auto-login functionality)
+   SAP_SYSTEM=your_system_id      # e.g., PRD, DEV, QAS
+   SAP_CLIENT=your_client         # e.g., 100, 200
+   SAP_USER=your_username
+   SAP_PASSWORD=your_password
+   SAP_LANGUAGE=EN                # Optional: EN, DE, FR, etc.
    ```
-   # Add any environment variables here if needed
-   ```
+
+   **Note:** With credentials configured, the MCP server can automatically log in to SAP if no session exists.
 
 2. **Verify SAP GUI connection:**
-   Ensure SAP GUI is running and you have an active session before using the MCP server.
+   - **Option A (Manual):** Start SAP GUI and log into a system before using the MCP server
+   - **Option B (Auto-login):** Configure `.env` file with credentials, and the server will automatically create a session when needed
 
 ## Running the Server
 
@@ -113,9 +123,16 @@ python -m src.server
 
 To verify the installation works correctly:
 
-1. Start SAP GUI and log into a system
+### Option A: Manual Login
+1. Start SAP GUI and log into a system manually
 2. Run the MCP server
-3. Test basic functionality using the available tools
+3. Use `get_session_info()` tool to verify the connection
+
+### Option B: Auto-Login
+1. Configure `.env` file with SAP credentials
+2. Run the MCP server
+3. Use `login_to_sap()` tool to create a new session automatically
+4. Verify with `get_session_info()` tool
 
 ## Dependencies
 
