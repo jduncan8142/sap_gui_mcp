@@ -664,6 +664,7 @@ def set_vertical_scrollbar_position(element_id: str, position: int) -> dict:
         return {"error": str(e), "message": "Failed to set vertical scrollbar position"}
 
 
+@mcp.tool()
 def get_horizontal_scrollbar_position(element_id: str) -> dict:
     """
     Get the current position of the horizontal scrollbar in an SAP GUI grid control.
