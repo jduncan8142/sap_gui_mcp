@@ -15,25 +15,34 @@ mcp = FastMCP("SAP GUI MCP Server")
 
 logger = logging.getLogger(__name__)
 
+# Polling interval for SAP GUI operations (in seconds)
+POLLING_INTERVAL = 0.5
+
 
 def create_sap_session(
     system: str,
-    client: str,
-    user: str,
-    password: str,
+    client: str = None,
+    user: str = None,
+    password: str = None,
     language: str = "EN",
     max_wait_time: int = 30,
+    login_window_wait_time: float = 1.0,
+    login_complete_wait_time: float = 2.0,
+    use_sso: bool = False,
 ) -> Optional[win32com.client.CDispatch]:
     """
-    Create a new SAP session by logging in with credentials.
+    Create a new SAP session by logging in with credentials or SSO.
 
     Args:
         system: SAP system ID (e.g., "PRD", "DEV")
-        client: SAP client number (e.g., "100")
-        user: SAP username
-        password: SAP password
+        client: SAP client number (e.g., "100"). Optional if use_sso=True
+        user: SAP username. Optional if use_sso=True
+        password: SAP password. Optional if use_sso=True
         language: SAP language code (default: "EN")
         max_wait_time: Maximum time to wait for connection in seconds (default: 30)
+        login_window_wait_time: Time to wait for login window to appear in seconds (default: 1.0)
+        login_complete_wait_time: Time to wait for login to complete in seconds (default: 2.0)
+        use_sso: If True, use Windows SSO authentication instead of credentials (default: False)
 
     Returns:
         SAP session object if successful, None otherwise
@@ -65,10 +74,8 @@ def create_sap_session(
 
         # Wait for connection to be established
         start_time = time.time()
-        # Poll every 0.5 seconds for a session to be established.
-        # 0.5s interval chosen to balance responsiveness and resource usage for SAP GUI connection.
-        while (len(connection.Sessions) == 0) and (time.time() - start_time) < max_wait_time:
-            time.sleep(0.5)
+        while not connection.Sessions and (time.time() - start_time) < max_wait_time:
+            time.sleep(POLLING_INTERVAL)
 
         if not connection.Sessions:
             logger.error("Connection established but no session created.")
@@ -76,33 +83,51 @@ def create_sap_session(
 
         session = connection.Sessions[0]
 
-        # Fill in login credentials
+        # Handle login based on authentication method
         try:
             # Wait for login window to appear
-            time.sleep(1)
+            time.sleep(login_window_wait_time)
 
-            # Find and fill login fields
-            # Standard SAP login screen field IDs
-            session.FindById("wnd[0]/usr/txtRSYST-MANDT").Text = client
-            session.FindById("wnd[0]/usr/txtRSYST-BNAME").Text = user
-            session.FindById("wnd[0]/usr/pwdRSYST-BCODE").Text = password
-            session.FindById("wnd[0]/usr/txtRSYST-LANGU").Text = language
+            if use_sso:
+                # SSO Authentication - use Windows credentials
+                logger.info(f"Attempting SSO login to {system}")
 
-            # Press Enter to login
-            session.FindById("wnd[0]").SendVKey(0)  # VKey 0 = Enter
+                # For SSO, we typically only need to set client and press Enter
+                # SAP GUI will handle Windows authentication automatically
+                if client:
+                    session.FindById("wnd[0]/usr/txtRSYST-MANDT").Text = client
+
+                # Press Enter to trigger SSO authentication
+                session.FindById("wnd[0]").SendVKey(0)  # VKey 0 = Enter
+
+            else:
+                # Standard credential-based authentication
+                logger.info(f"Attempting credential login to {system} as {user}")
+
+                # Find and fill login fields
+                # Standard SAP login screen field IDs
+                session.FindById("wnd[0]/usr/txtRSYST-MANDT").Text = client
+                session.FindById("wnd[0]/usr/txtRSYST-BNAME").Text = user
+                session.FindById("wnd[0]/usr/pwdRSYST-BCODE").Text = password
+                session.FindById("wnd[0]/usr/txtRSYST-LANGU").Text = language
+
+                # Press Enter to login
+                session.FindById("wnd[0]").SendVKey(0)  # VKey 0 = Enter
 
             # Wait for login to complete
-            time.sleep(2)
+            time.sleep(login_complete_wait_time)
 
             # Check if login was successful by verifying we're not still on login screen
             try:
                 # If we can still find the password field, login failed
                 session.FindById("wnd[0]/usr/pwdRSYST-BCODE")
-                logger.error("Login failed - still on login screen. Check credentials.")
+                auth_method = "SSO" if use_sso else "credential"
+                logger.error(f"Login failed - still on login screen. Check {auth_method} configuration.")
                 return None
             except Exception:
                 # Password field not found = we've moved past login screen = success
-                logger.info(f"Successfully logged in to {system} as {user}")
+                auth_method = "SSO" if use_sso else f"credentials for {user}"
+                logger.info(f"Successfully logged in to {system} using {auth_method}")
                 return session
 
         except Exception as login_error:
@@ -240,17 +265,24 @@ def login_to_sap(
     user: str = None,
     password: str = None,
     language: str = "EN",
+    login_window_wait_time: float = 1.0,
+    login_complete_wait_time: float = 2.0,
+    use_sso: bool = False,
 ) -> str:
     """
-    Create a new SAP session by logging in with credentials.
+    Create a new SAP session by logging in with credentials or SSO.
     If credentials are not provided, they will be read from environment variables.
+    If use_sso is True, Windows Single Sign-On will be used instead of credentials.
 
     Args:
         system: SAP system ID (e.g., "PRD", "DEV"). If None, uses SAP_SYSTEM env var.
         client: SAP client number (e.g., "100"). If None, uses SAP_CLIENT env var.
-        user: SAP username. If None, uses SAP_USER env var.
-        password: SAP password. If None, uses SAP_PASSWORD env var.
+        user: SAP username. If None, uses SAP_USER env var. Not required if use_sso=True.
+        password: SAP password. If None, uses SAP_PASSWORD env var. Not required if use_sso=True.
         language: SAP language code (default: "EN"). If None, uses SAP_LANGUAGE env var.
+        login_window_wait_time: Time to wait for login window to appear in seconds (default: 1.0).
+        login_complete_wait_time: Time to wait for login to complete in seconds (default: 2.0).
+        use_sso: If True, use Windows SSO authentication instead of credentials (default: False).
 
     Returns:
         Success message with session info or error message
@@ -262,21 +294,36 @@ def login_to_sap(
     sap_password = password if password is not None else os.getenv("SAP_PASSWORD")
     sap_language = language if language is not None else os.getenv("SAP_LANGUAGE", "EN")
 
-    # Validate all required credentials are available
-    if not all([sap_system, sap_client, sap_user, sap_password]):
-        missing = []
-        if not sap_system:
-            missing.append("system (SAP_SYSTEM)")
-        if not sap_client:
-            missing.append("client (SAP_CLIENT)")
-        if not sap_user:
-            missing.append("user (SAP_USER)")
-        if not sap_password:
-            missing.append("password (SAP_PASSWORD)")
+    # Check if SSO should be used from environment variable
+    # use_sso parameter takes precedence over environment variable
+    if not use_sso:
+        sso_env = os.getenv("SAP_USE_SSO", "false").lower()
+        use_sso = sso_env in ("true", "1", "yes")
 
-        error_msg = f"Login failed: Missing required parameters: {', '.join(missing)}"
-        logger.error(error_msg)
-        return error_msg
+    # Validate required parameters based on authentication method
+    if use_sso:
+        # For SSO, only system is required
+        if not sap_system:
+            error_msg = "Login failed: Missing required parameter: system (SAP_SYSTEM)"
+            logger.error(error_msg)
+            return error_msg
+        logger.info(f"Using SSO authentication for system {sap_system}")
+    else:
+        # For credential login, all fields are required
+        if not all([sap_system, sap_client, sap_user, sap_password]):
+            missing = []
+            if not sap_system:
+                missing.append("system (SAP_SYSTEM)")
+            if not sap_client:
+                missing.append("client (SAP_CLIENT)")
+            if not sap_user:
+                missing.append("user (SAP_USER)")
+            if not sap_password:
+                missing.append("password (SAP_PASSWORD)")
+
+            error_msg = f"Login failed: Missing required parameters: {', '.join(missing)}"
+            logger.error(error_msg)
+            return error_msg
 
     # Attempt to create session
     session = create_sap_session(
@@ -285,6 +332,9 @@ def login_to_sap(
         user=sap_user,
         password=sap_password,
         language=sap_language,
+        login_window_wait_time=login_window_wait_time,
+        login_complete_wait_time=login_complete_wait_time,
+        use_sso=use_sso,
     )
 
     if session:
