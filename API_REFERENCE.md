@@ -61,6 +61,8 @@ session_info = get_session_info()
 - `user` (str, optional): SAP username. If None, uses `SAP_USER` environment variable
 - `password` (str, optional): SAP password. If None, uses `SAP_PASSWORD` environment variable
 - `language` (str, optional): SAP language code (default: "EN"). If None, uses `SAP_LANGUAGE` environment variable
+- `login_window_wait_time` (float, optional): Time to wait for login window to appear in seconds (default: 1.0). Increase for slower systems.
+- `login_complete_wait_time` (float, optional): Time to wait for login to complete in seconds (default: 2.0). Increase for slower systems.
 
 **Returns**: JSON string containing session information or error message
 
@@ -101,6 +103,19 @@ result = login_to_sap(
 # Use env for most, override password only
 result = login_to_sap(password="DifferentPassword")
 # Uses SAP_SYSTEM, SAP_CLIENT, SAP_USER from .env, but provided password
+```
+
+**Example 4** (With custom wait times for slower systems):
+```python
+result = login_to_sap(
+    system="PRD",
+    client="100",
+    user="MYUSER",
+    password="MyPass123",
+    login_window_wait_time=3.0,  # Wait 3 seconds for login window
+    login_complete_wait_time=5.0  # Wait 5 seconds for login to complete
+)
+# Returns: Session info JSON
 ```
 
 **Error Returns**:

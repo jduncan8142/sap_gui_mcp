@@ -23,6 +23,8 @@ def create_sap_session(
     password: str,
     language: str = "EN",
     max_wait_time: int = 30,
+    login_window_wait_time: float = 1.0,
+    login_complete_wait_time: float = 2.0,
 ) -> Optional[win32com.client.CDispatch]:
     """
     Create a new SAP session by logging in with credentials.
@@ -34,6 +36,8 @@ def create_sap_session(
         password: SAP password
         language: SAP language code (default: "EN")
         max_wait_time: Maximum time to wait for connection in seconds (default: 30)
+        login_window_wait_time: Time to wait for login window to appear in seconds (default: 1.0)
+        login_complete_wait_time: Time to wait for login to complete in seconds (default: 2.0)
 
     Returns:
         SAP session object if successful, None otherwise
@@ -77,7 +81,7 @@ def create_sap_session(
         # Fill in login credentials
         try:
             # Wait for login window to appear
-            time.sleep(1)
+            time.sleep(login_window_wait_time)
 
             # Find and fill login fields
             # Standard SAP login screen field IDs
@@ -90,7 +94,7 @@ def create_sap_session(
             session.FindById("wnd[0]").SendVKey(0)  # VKey 0 = Enter
 
             # Wait for login to complete
-            time.sleep(2)
+            time.sleep(login_complete_wait_time)
 
             # Check if login was successful by verifying we're not still on login screen
             try:
@@ -238,6 +242,8 @@ def login_to_sap(
     user: str = None,
     password: str = None,
     language: str = "EN",
+    login_window_wait_time: float = 1.0,
+    login_complete_wait_time: float = 2.0,
 ) -> str:
     """
     Create a new SAP session by logging in with credentials.
@@ -249,6 +255,8 @@ def login_to_sap(
         user: SAP username. If None, uses SAP_USER env var.
         password: SAP password. If None, uses SAP_PASSWORD env var.
         language: SAP language code (default: "EN"). If None, uses SAP_LANGUAGE env var.
+        login_window_wait_time: Time to wait for login window to appear in seconds (default: 1.0).
+        login_complete_wait_time: Time to wait for login to complete in seconds (default: 2.0).
 
     Returns:
         Success message with session info or error message
@@ -283,6 +291,8 @@ def login_to_sap(
         user=sap_user,
         password=sap_password,
         language=sap_language,
+        login_window_wait_time=login_window_wait_time,
+        login_complete_wait_time=login_complete_wait_time,
     )
 
     if session:
