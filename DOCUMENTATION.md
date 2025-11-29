@@ -244,9 +244,10 @@ The `.env.example` file shows available configuration options:
 # SAP Credentials (used for auto-login functionality) ⭐ NOW ACTIVE
 SAP_SYSTEM=your_system_id      # SAP system ID (e.g., PRD, DEV, QAS)
 SAP_CLIENT=your_client         # SAP client number (e.g., 100, 200)
-SAP_USER=your_username         # SAP username
-SAP_PASSWORD=your_password     # SAP password
+SAP_USER=your_username         # SAP username (not required if using SSO)
+SAP_PASSWORD=your_password     # SAP password (not required if using SSO)
 SAP_LANGUAGE=EN                # SAP language code (EN, DE, FR, etc.)
+SAP_USE_SSO=false              # Use Windows Single Sign-On (true/false)
 
 # Logging Levels
 LOG_LEVEL=ERROR
@@ -256,11 +257,16 @@ ASYNCIO_LOG_LEVEL=ERROR
 SAP_CONTROLLER_LOG_LEVEL=ERROR
 ```
 
-**How Auto-Login Works**:
-- Configure credentials in `.env` file
-- Call `login_to_sap()` tool without parameters to use environment credentials
-- Or pass credentials directly to `login_to_sap()` for one-time login
-- The `sap_session()` function can optionally auto-login if `auto_login=True`
+**Authentication Methods**:
+- **Credential-based Login**:
+  - Configure `SAP_USER` and `SAP_PASSWORD` in `.env`
+  - Call `login_to_sap()` tool without parameters to use environment credentials
+  - Or pass credentials directly to `login_to_sap()` for one-time login
+- **SSO (Single Sign-On) ⭐ NEW**:
+  - Set `SAP_USE_SSO=true` in `.env` file
+  - Uses your Windows login credentials automatically
+  - Only requires `SAP_SYSTEM` (and optionally `SAP_CLIENT`)
+  - Call `login_to_sap(use_sso=True)` to use SSO authentication
 
 ## Usage Patterns
 
@@ -272,22 +278,29 @@ SAP_CONTROLLER_LOG_LEVEL=ERROR
 3. **Connect MCP client** (e.g., Claude Desktop)
 4. **Use tools** to interact with SAP GUI
 
-#### Option B: Auto-Login (New) ⭐
+#### Option B: Auto-Login with Credentials ⭐
 1. **Configure `.env` file** with SAP credentials
 2. **Launch the MCP server**: `python src/server.py`
 3. **Connect MCP client** (e.g., Claude Desktop)
 4. **Call `login_to_sap()`** - session created automatically
 5. **Use tools** to interact with SAP GUI
 
+#### Option C: Auto-Login with SSO ⭐ NEW
+1. **Configure `.env` file** with `SAP_USE_SSO=true`
+2. **Launch the MCP server**: `python src/server.py`
+3. **Connect MCP client** (e.g., Claude Desktop)
+4. **Call `login_to_sap(use_sso=True)`** - uses Windows credentials
+5. **Use tools** to interact with SAP GUI
+
 ### Example Use Cases
 
 #### 1. Auto-Login to SAP
 ```python
-# Login using environment credentials
+# Option A: Login using environment credentials
 login_to_sap()
 # Returns: Session info including User, Client, SystemName
 
-# Or login with explicit credentials
+# Option B: Login with explicit credentials
 login_to_sap(
     system="PRD",
     client="100",
@@ -295,6 +308,10 @@ login_to_sap(
     password="MyPass123",
     language="EN"
 )
+
+# Option C: Login with SSO (Windows authentication)
+login_to_sap(system="PRD", client="100", use_sso=True)
+# Returns: Session info using Windows login
 ```
 
 #### 2. Session Verification

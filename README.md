@@ -94,16 +94,20 @@ This will automatically configure the MCP server to work with Claude Desktop, al
    # SAP Credentials (used for auto-login functionality)
    SAP_SYSTEM=your_system_id      # e.g., PRD, DEV, QAS
    SAP_CLIENT=your_client         # e.g., 100, 200
-   SAP_USER=your_username
-   SAP_PASSWORD=your_password
+   SAP_USER=your_username         # Not required if using SSO
+   SAP_PASSWORD=your_password     # Not required if using SSO
    SAP_LANGUAGE=EN                # Optional: EN, DE, FR, etc.
+   SAP_USE_SSO=false              # Use Windows SSO instead of credentials
    ```
 
-   **Note:** With credentials configured, the MCP server can automatically log in to SAP if no session exists.
+   **Authentication Options:**
+   - **Credential-based**: Set `SAP_USER` and `SAP_PASSWORD`, leave `SAP_USE_SSO=false`
+   - **SSO (Single Sign-On)**: Set `SAP_USE_SSO=true`, uses your Windows login credentials
 
 2. **Verify SAP GUI connection:**
    - **Option A (Manual):** Start SAP GUI and log into a system before using the MCP server
-   - **Option B (Auto-login):** Configure `.env` file with credentials, and the server will automatically create a session when needed
+   - **Option B (Auto-login with credentials):** Configure `.env` file with credentials, and the server will automatically create a session when needed
+   - **Option C (Auto-login with SSO):** Set `SAP_USE_SSO=true` in `.env`, and the server will use your Windows credentials
 
 ## Running the Server
 
@@ -128,10 +132,16 @@ To verify the installation works correctly:
 2. Run the MCP server
 3. Use `get_session_info()` tool to verify the connection
 
-### Option B: Auto-Login
+### Option B: Auto-Login with Credentials
 1. Configure `.env` file with SAP credentials
 2. Run the MCP server
 3. Use `login_to_sap()` tool to create a new session automatically
+4. Verify with `get_session_info()` tool
+
+### Option C: Auto-Login with SSO
+1. Configure `.env` file with `SAP_SYSTEM` and `SAP_USE_SSO=true`
+2. Run the MCP server
+3. Use `login_to_sap(use_sso=True)` tool to create a session with Windows SSO
 4. Verify with `get_session_info()` tool
 
 ## Dependencies

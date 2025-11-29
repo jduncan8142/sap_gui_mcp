@@ -53,16 +53,17 @@ session_info = get_session_info()
 
 ### `login_to_sap()` ⭐ NEW
 
-**Description**: Creates a new SAP session by logging in with credentials. Enables automatic session creation without manual SAP GUI login.
+**Description**: Creates a new SAP session by logging in with credentials or Windows SSO. Enables automatic session creation without manual SAP GUI login.
 
 **Parameters**:
 - `system` (str, optional): SAP system ID (e.g., "PRD", "DEV", "QAS"). If None, uses `SAP_SYSTEM` environment variable
-- `client` (str, optional): SAP client number (e.g., "100", "200"). If None, uses `SAP_CLIENT` environment variable
-- `user` (str, optional): SAP username. If None, uses `SAP_USER` environment variable
-- `password` (str, optional): SAP password. If None, uses `SAP_PASSWORD` environment variable
+- `client` (str, optional): SAP client number (e.g., "100", "200"). If None, uses `SAP_CLIENT` environment variable. Not required if `use_sso=True`
+- `user` (str, optional): SAP username. If None, uses `SAP_USER` environment variable. Not required if `use_sso=True`
+- `password` (str, optional): SAP password. If None, uses `SAP_PASSWORD` environment variable. Not required if `use_sso=True`
 - `language` (str, optional): SAP language code (default: "EN"). If None, uses `SAP_LANGUAGE` environment variable
 - `login_window_wait_time` (float, optional): Time to wait for login window to appear in seconds (default: 1.0). Increase for slower systems.
 - `login_complete_wait_time` (float, optional): Time to wait for login to complete in seconds (default: 2.0). Increase for slower systems.
+- `use_sso` (bool, optional): If True, use Windows Single Sign-On instead of credentials (default: False). Can also be set via `SAP_USE_SSO` environment variable
 
 **Returns**: JSON string containing session information or error message
 
@@ -118,6 +119,25 @@ result = login_to_sap(
 # Returns: Session info JSON
 ```
 
+**Example 5** (Using Windows SSO - Single Sign-On) ⭐ NEW:
+```python
+# SSO using environment variable SAP_USE_SSO=true
+result = login_to_sap(system="PRD")
+# Returns: Session info JSON using Windows credentials
+
+# SSO with explicit parameter
+result = login_to_sap(
+    system="PRD",
+    client="100",
+    use_sso=True
+)
+# Returns: Session info JSON using Windows credentials
+
+# SSO from environment (requires SAP_USE_SSO=true in .env)
+result = login_to_sap()
+# Returns: Session info JSON using Windows credentials
+```
+
 **Error Returns**:
 - `"Login failed: Missing required parameters: <list>"` - When required credentials are not provided
 - `"Failed to create SAP session for system <system>..."` - When login fails (wrong credentials, system unavailable, etc.)
@@ -127,14 +147,16 @@ result = login_to_sap(
 **Prerequisites**:
 1. SAP GUI for Windows must be running
 2. SAP system must be configured in SAP Logon
-3. Valid credentials (either in `.env` or passed as parameters)
-4. SAP GUI Scripting must be enabled
+3. For credential login: Valid credentials (either in `.env` or passed as parameters)
+4. For SSO login: Windows user must be authorized for SAP system access
+5. SAP GUI Scripting must be enabled
 
 **Use Cases**:
 - Automated session creation for CI/CD pipelines
 - Recover from disconnected sessions
 - Create sessions without manual login
 - Test different user accounts programmatically
+- **SSO**: Seamless authentication using Windows credentials (ideal for corporate environments with Active Directory integration)
 
 **Source**: `src/server.py:234`
 
