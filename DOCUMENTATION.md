@@ -59,10 +59,12 @@ The main server module contains:
 ### Session Management Tools
 
 1. **`get_session_info()`**
+
    - Returns session metadata (User, Client, Language, System)
    - Useful for verification and debugging
 
 2. **`login_to_sap(system, client, user, password, language)`** ⭐ NEW
+
    - Creates a new SAP session by logging in with credentials
    - Can use parameters or environment variables
    - Enables automatic session creation
@@ -74,6 +76,7 @@ The main server module contains:
 ### Navigation Tools
 
 4. **`start_transaction(transaction_code: str)`**
+
    - Launches SAP transactions (e.g., SE38, VA01)
    - Core navigation functionality
 
@@ -84,14 +87,17 @@ The main server module contains:
 ### Element Discovery Tools
 
 6. **`get_sap_gui_tree()`**
+
    - Returns JSON representation of the GUI object tree
    - Critical for element identification
 
 7. **`find_by_id(element_id: str, raise_error: bool = False)`**
+
    - Locates GUI elements by ID
    - Primary element lookup method
 
 8. **`find_by_name(element_name: str, element_type: str)`**
+
    - Finds elements by name and type
    - Alternative lookup method
 
@@ -102,26 +108,32 @@ The main server module contains:
 ### Input/Output Tools
 
 10. **`set_text(element_id: str, text: str)`**
+
     - Sets text field values
     - Basic data entry
 
 11. **`get_text(element_id: str)`**
+
     - Retrieves text from fields
     - Data extraction
 
 12. **`press_button(element_id: str)`**
+
     - Simulates button clicks
     - User interaction
 
 13. **`set_radio_button(element_id: str, selected: bool)`**
+
     - Selects radio buttons
     - Form interaction
 
 14. **`set_checkbox(element_id: str, state: bool)`**
+
     - Sets checkbox state
     - Boolean input
 
 15. **`set_combobox(element_id: str, key: str)`**
+
     - Sets dropdown/combobox values
     - Selection input
 
@@ -132,6 +144,7 @@ The main server module contains:
 ### Command Execution Tools
 
 17. **`send_command(command: str)`**
+
     - Sends synchronous commands to SAP
     - Direct SAP command execution
 
@@ -142,19 +155,23 @@ The main server module contains:
 ### Grid Control Tools
 
 19. **`get_grid_data(element_id: str)`**
+
     - Extracts all data from grid controls (ALV tables)
     - Returns columns, rows, and cell values
     - Critical for data extraction
 
 20. **`get_grid_cell_value(element_id: str, row: int, column: int)`**
+
     - Retrieves specific cell value
     - Targeted data access
 
 21. **`select_grid_row(element_id: str, row: int)`**
+
     - Selects a specific row in grid
     - Row manipulation
 
 22. **`get_selected_grid_rows(element_id: str)`**
+
     - Returns data from selected rows
     - Batch data extraction
 
@@ -165,14 +182,17 @@ The main server module contains:
 ### Scrollbar Management Tools
 
 24. **`get_vertical_scrollbar_position(element_id: str)`**
+
     - Gets vertical scroll position
     - Grid navigation state
 
 25. **`set_vertical_scrollbar_position(element_id: str, position: int)`**
+
     - Sets vertical scroll position
     - Grid navigation control
 
 26. **`get_horizontal_scrollbar_position(element_id: str)`** ✅ FIXED
+
     - Gets horizontal scroll position
     - Now properly exposed with `@mcp.tool()` decorator
 
@@ -217,6 +237,7 @@ dependencies = [
 ### Installation Methods
 
 #### Method 1: Development Installation
+
 ```powershell
 git clone https://github.com/jduncan8142/sap_gui_mcp.git
 cd sap_gui_mcp
@@ -226,12 +247,14 @@ pip install -e .
 ```
 
 #### Method 2: UV Package Manager
+
 ```powershell
 pip install uv
 uv pip install -e .
 ```
 
 #### Method 3: Claude Desktop Integration
+
 ```powershell
 uv run fastmcp install claude-desktop .\src\server.py
 ```
@@ -258,6 +281,7 @@ SAP_CONTROLLER_LOG_LEVEL=ERROR
 ```
 
 **Authentication Methods**:
+
 - **Credential-based Login**:
   - Configure `SAP_USER` and `SAP_PASSWORD` in `.env`
   - Call `login_to_sap()` tool without parameters to use environment credentials
@@ -273,12 +297,14 @@ SAP_CONTROLLER_LOG_LEVEL=ERROR
 ### Basic Workflow
 
 #### Option A: Manual Login (Traditional)
+
 1. **Start SAP GUI and log in** manually to your system
 2. **Launch the MCP server**: `python src/server.py`
 3. **Connect MCP client** (e.g., Claude Desktop)
 4. **Use tools** to interact with SAP GUI
 
 #### Option B: Auto-Login with Credentials ⭐
+
 1. **Configure `.env` file** with SAP credentials
 2. **Launch the MCP server**: `python src/server.py`
 3. **Connect MCP client** (e.g., Claude Desktop)
@@ -286,6 +312,7 @@ SAP_CONTROLLER_LOG_LEVEL=ERROR
 5. **Use tools** to interact with SAP GUI
 
 #### Option C: Auto-Login with SSO ⭐ NEW
+
 1. **Configure `.env` file** with `SAP_USE_SSO=true`
 2. **Launch the MCP server**: `python src/server.py`
 3. **Connect MCP client** (e.g., Claude Desktop)
@@ -295,6 +322,7 @@ SAP_CONTROLLER_LOG_LEVEL=ERROR
 ### Example Use Cases
 
 #### 1. Auto-Login to SAP
+
 ```python
 # Option A: Login using environment credentials
 login_to_sap()
@@ -315,6 +343,7 @@ login_to_sap(system="PRD", client="100", use_sso=True)
 ```
 
 #### 2. Session Verification
+
 ```python
 # Check current session
 get_session_info()
@@ -322,6 +351,7 @@ get_session_info()
 ```
 
 #### 3. Transaction Navigation
+
 ```python
 # Start a transaction
 start_transaction("SE38")
@@ -334,6 +364,7 @@ end_transaction()
 ```
 
 #### 3. Data Entry
+
 ```python
 # Get GUI tree to find element IDs
 get_sap_gui_tree()
@@ -348,6 +379,7 @@ press_button("wnd[0]/usr/btnEXECUTE")
 ```
 
 #### 4. Grid Data Extraction
+
 ```python
 # Extract all data from a grid
 grid_data = get_grid_data("wnd[0]/usr/cntlGRID1/shellcont/shell")
@@ -394,8 +426,8 @@ b187ffc - Initial Commit 20250930
 
 ### Functional Gaps (Reduced) ✅
 
-~~1. **No Authentication**: No automatic login capability (credentials unused)~~ **FIXED - Auto-login now available**
-~~2. **No Session Creation**: Assumes existing SAP session~~ **FIXED - Can create sessions via login_to_sap()**
+1. ~~**No Authentication**: No automatic login capability (credentials unused)~~ **FIXED - Auto-login now available**
+2. ~~**No Session Creation**: Assumes existing SAP session~~ **FIXED - Can create sessions via login_to_sap()**
 3. **Limited Error Recovery**: Basic error handling without retry logic
 4. **Single Window Focus**: Primarily works with active window
 
@@ -425,6 +457,7 @@ b187ffc - Initial Commit 20250930
 2. Run the MCP server: `python src/server.py`
 3. Connect an MCP client
 4. Test basic tools:
+   - `login_to_sap()` - Create new session
    - `get_session_info()` - Verify connection
    - `get_sap_gui_tree()` - Check GUI parsing
    - `start_transaction("SE38")` - Test navigation
@@ -467,13 +500,13 @@ b187ffc - Initial Commit 20250930
 
 ### Common Issues
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| "SAP GUI is not running" | SAP not started | Start SAP GUI and log in |
-| COM object errors | pywin32 not installed | Run `python -m pywin32_postinstall -install` |
-| Python version errors | Python < 3.13 | Upgrade to Python 3.13+ |
-| Permission errors | Insufficient rights | Run PowerShell as Administrator |
-| Scripting disabled | SAP setting | Enable in SAP Logon options |
+| Issue                    | Cause                 | Solution                                     |
+| ------------------------ | --------------------- | -------------------------------------------- |
+| "SAP GUI is not running" | SAP not started       | Start SAP GUI and log in                     |
+| COM object errors        | pywin32 not installed | Run `python -m pywin32_postinstall -install` |
+| Python version errors    | Python < 3.13         | Upgrade to Python 3.13+                      |
+| Permission errors        | Insufficient rights   | Run PowerShell as Administrator              |
+| Scripting disabled       | SAP setting           | Enable in SAP Logon options                  |
 
 ### Debug Mode
 
@@ -484,6 +517,7 @@ logging.basicConfig(level=logging.DEBUG)
 ```
 
 Or set in `.env`:
+
 ```env
 LOG_LEVEL=DEBUG
 ```
