@@ -32,3 +32,6 @@ asyncio_logger = logging.getLogger("asyncio").setLevel(get_log_level(os.getenv("
 sap_controller_logger = logging.getLogger("sap_controller").setLevel(
     get_log_level(os.getenv("SAP_CONTROLLER_LOG_LEVEL", "ERROR").upper())
 )
+sap_logon_pad = logging.getLogger("sap_logon_pad").setLevel(
+    get_log_level(os.getenv("SAP_LOGON_PAD_LOG_LEVEL", "ERROR").upper())
+)

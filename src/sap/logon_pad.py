@@ -6,9 +6,9 @@ import win32com.client
 import ctypes
 from logging import getLogger
 
-logger = getLogger("sap_controller")
+logger = getLogger("sap_logon_pad")
 MAX_RETRIES = 10
-WAIT_TIME = 3.0
+WAIT_TIME = 30.0
 POLLING_INTERVAL = 0.5
 
 
@@ -30,7 +30,10 @@ def get_system_language() -> str | None:
 
         return windows_locale.get(langid, None)
 
-    return langid_to_locale(language_id) if langid_to_locale(language_id) else langid_to_locale(system_language_id)
+    _language = langid_to_locale(language_id) if langid_to_locale(language_id) else langid_to_locale(system_language_id)
+    if _language == "en_US":
+        return "EN"
+    return _language
 
 
 def is_sap_logon_running() -> bool:

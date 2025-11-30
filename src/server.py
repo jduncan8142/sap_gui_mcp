@@ -5,34 +5,13 @@ import os
 import win32com.client
 from logging import getLogger
 
-from sap.logon_pad import launch_sap_logon, sap_session, create_sap_session
-
+from sap.logon_pad import launch_sap_logon, sap_session, create_sap_session, get_system_language
+from sap.gui import sap_object_tree_as_json
 
 # Initialize FastMCP server
 mcp = FastMCP("SAP GUI MCP Server")
 
 logger = getLogger("server")
-
-
-def sap_object_tree_as_json(session: Optional[win32com.client.CDispatch]) -> dict:
-    """Convert SAP object tree string to JSON."""
-    try:
-        _json_objects = []
-        if not session:
-            _current_session = sap_session()
-        else:
-            _current_session = session
-        if not _current_session:
-            logger.error("No current session available.")
-            return {"Windows": []}
-        _windows = _current_session.Children
-        for window in _windows:
-            _win = json.loads(_current_session.GetObjectTree(window.Id))
-            _json_objects.append(_win)
-        return {"Windows": _json_objects}
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to decode SAP object tree: {str(e)}")
-        return {"Windows": []}
 
 
 @mcp.tool()
@@ -84,7 +63,7 @@ def login_to_sap(
     client: Optional[str] = None,
     user: Optional[str] = None,
     password: Optional[str] = None,
-    language: str = "EN",
+    language: Optional[str] = None,
     use_sso: bool = False,
 ) -> str:
     """
@@ -94,23 +73,21 @@ def login_to_sap(
 
     Args:
         system: SAP system ID (e.g., "PRD", "DEV"). If None, uses SAP_SYSTEM env var.
-        client: SAP client number (e.g., "100"). If None, uses SAP_CLIENT env var.
+        client: SAP client number (e.g., "100"). If None, uses SAP_CLIENT env var. Not required if use_sso=True.
         user: SAP username. If None, uses SAP_USER env var. Not required if use_sso=True.
         password: SAP password. If None, uses SAP_PASSWORD env var. Not required if use_sso=True.
-        language: SAP language code (default: "EN"). If None, uses SAP_LANGUAGE env var.
-        login_window_wait_time: Time to wait for login window to appear in seconds (default: 1.0).
-        login_complete_wait_time: Time to wait for login to complete in seconds (default: 2.0).
+        language: SAP language code (default: System Language). If None, uses SAP_LANGUAGE env var. Not required if use_sso=True.
         use_sso: If True, use Windows SSO authentication instead of credentials (default: False).
 
     Returns:
         Success message with session info or error message
     """
     # Use environment variables if parameters not provided
-    sap_system = system if system is not None else os.getenv("SAP_SYSTEM")
-    sap_client = client if client is not None else os.getenv("SAP_CLIENT")
-    sap_user = user if user is not None else os.getenv("SAP_USER")
-    sap_password = password if password is not None else os.getenv("SAP_PASSWORD")
-    sap_language = language if language is not None else os.getenv("SAP_LANGUAGE", "EN")
+    sap_system = system if system is not None else os.getenv("SAP_SYSTEM", None)
+    sap_client = client if client is not None else os.getenv("SAP_CLIENT", None)
+    sap_user = user if user is not None else os.getenv("SAP_USER", None)
+    sap_password = password if password is not None else os.getenv("SAP_PASSWORD", None)
+    sap_language = language if language is not None else os.getenv("SAP_LANGUAGE", get_system_language())
 
     # Check if SSO should be used from environment variable
     # use_sso parameter takes precedence over environment variable
@@ -154,20 +131,11 @@ def login_to_sap(
     session: Optional[win32com.client.CDispatch] = None
     if use_sso:
         logger.info(f"Attempting to login to {sap_system} using SSO")
-        session = create_sap_session(
-            system=sap_system,
-            client=sap_client,
-            use_sso=use_sso,
-        )
+        session = create_sap_session(system=sap_system, use_sso=use_sso)
     else:
         logger.info(f"Attempting to login to {sap_system} as {sap_user}")
         session = create_sap_session(
-            system=sap_system,
-            client=sap_client,
-            user=sap_user,
-            password=sap_password,
-            language=sap_language,
-            use_sso=use_sso,
+            system=sap_system, client=sap_client, user=sap_user, password=sap_password, language=sap_language
         )
 
     if session:
