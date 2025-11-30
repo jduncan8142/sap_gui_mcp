@@ -272,12 +272,12 @@ SAP_PASSWORD=your_password     # SAP password (not required if using SSO)
 SAP_LANGUAGE=EN                # SAP language code (EN, DE, FR, etc.)
 SAP_USE_SSO=false              # Use Windows Single Sign-On (true/false)
 
-# Logging Levels
-LOG_LEVEL=ERROR
-SERVER_LOG_LEVEL=ERROR
-MCP_LOG_LEVEL=ERROR
-ASYNCIO_LOG_LEVEL=ERROR
-SAP_CONTROLLER_LOG_LEVEL=ERROR
+# Logging Levels (DEBUG, INFO, WARNING, ERROR, CRITICAL) ⭐ NOW ACTIVE
+LOG_LEVEL=ERROR                # Root logger level
+SERVER_LOG_LEVEL=ERROR         # Server logger level
+MCP_LOG_LEVEL=ERROR            # MCP logger level
+ASYNCIO_LOG_LEVEL=ERROR        # Asyncio logger level
+SAP_CONTROLLER_LOG_LEVEL=ERROR # SAP Controller logger level
 ```
 
 **Authentication Methods**:
@@ -291,6 +291,25 @@ SAP_CONTROLLER_LOG_LEVEL=ERROR
   - Uses your Windows login credentials automatically
   - Only requires `SAP_SYSTEM` (and optionally `SAP_CLIENT`)
   - Call `login_to_sap(use_sso=True)` to use SSO authentication
+
+**Logging Configuration ⭐ NEW**:
+
+The server now supports granular logging control through environment variables:
+
+- **LOG_LEVEL**: Controls the root logger (all messages)
+- **SERVER_LOG_LEVEL**: Controls server-specific logging
+- **MCP_LOG_LEVEL**: Controls FastMCP framework logging
+- **ASYNCIO_LOG_LEVEL**: Controls async operation logging
+- **SAP_CONTROLLER_LOG_LEVEL**: Controls SAP controller logging
+
+Valid levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` (default: `ERROR`)
+
+Each logger can be configured independently, allowing you to enable detailed logging for specific components while keeping others quiet. For example, to debug SAP operations while keeping other logs minimal:
+
+```env
+LOG_LEVEL=ERROR
+SAP_CONTROLLER_LOG_LEVEL=DEBUG
+```
 
 ## Usage Patterns
 
@@ -476,11 +495,11 @@ b187ffc - Initial Commit 20250930
 
 ### Recommended Additions
 
-1. **Authentication**: Implement automatic SAP logon using credentials
+1. ~~**Authentication**: Implement automatic SAP logon using credentials~~ **IMPLEMENTED**
 2. **Multi-Session Support**: Handle multiple SAP connections/sessions
 3. **Error Recovery**: Add retry logic and better error messages
-4. **Logging Configuration**: Use the defined log levels from environment
-5. **Missing Decorator**: Add `@mcp.tool()` to `get_horizontal_scrollbar_position()`
+4. ~~**Logging Configuration**: Use the defined log levels from environment~~ **IMPLEMENTED**
+5. ~~**Missing Decorator**: Add `@mcp.tool()` to `get_horizontal_scrollbar_position()`~~ **IMPLEMENTED**
 6. **Transaction Automation**: High-level wrappers for common SAP tasks
 7. **Screenshot Capability**: Capture SAP GUI screens for documentation
 8. **Recording/Playback**: Record user actions for script generation
@@ -508,19 +527,21 @@ b187ffc - Initial Commit 20250930
 | Permission errors        | Insufficient rights   | Run PowerShell as Administrator              |
 | Scripting disabled       | SAP setting           | Enable in SAP Logon options                  |
 
-### Debug Mode
+### Debug Mode ✅ ENHANCED
 
-To enable debug logging, modify `src/server.py`:
-
-```python
-logging.basicConfig(level=logging.DEBUG)
-```
-
-Or set in `.env`:
+To enable debug logging, set the appropriate log levels in your `.env` file:
 
 ```env
+# Enable debug logging for all components
 LOG_LEVEL=DEBUG
+
+# Or enable selectively for specific components
+SERVER_LOG_LEVEL=DEBUG
+MCP_LOG_LEVEL=INFO
+SAP_CONTROLLER_LOG_LEVEL=DEBUG
 ```
+
+The logging system is now fully configurable via environment variables without code changes.
 
 ## Contributing
 

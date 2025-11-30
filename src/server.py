@@ -10,6 +10,45 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Configure logging from environment variables
+def configure_logging():
+    """Configure logging levels from environment variables."""
+    # Get log levels from environment, default to ERROR
+    log_level = os.getenv("LOG_LEVEL", "ERROR").upper()
+    server_log_level = os.getenv("SERVER_LOG_LEVEL", "ERROR").upper()
+    mcp_log_level = os.getenv("MCP_LOG_LEVEL", "ERROR").upper()
+    asyncio_log_level = os.getenv("ASYNCIO_LOG_LEVEL", "ERROR").upper()
+    sap_controller_log_level = os.getenv("SAP_CONTROLLER_LOG_LEVEL", "ERROR").upper()
+
+    # Valid log levels
+    valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+
+    # Validate and convert to logging constants
+    def get_log_level(level_str: str, default: str = "ERROR") -> int:
+        """Convert string log level to logging constant."""
+        level_str = level_str.upper()
+        if level_str not in valid_levels:
+            level_str = default
+        return getattr(logging, level_str)
+
+    # Configure root logger
+    root_level = get_log_level(log_level)
+    logging.basicConfig(
+        level=root_level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    # Configure individual logger levels
+    logging.getLogger("server").setLevel(get_log_level(server_log_level))
+    logging.getLogger("fastmcp").setLevel(get_log_level(mcp_log_level))
+    logging.getLogger("mcp").setLevel(get_log_level(mcp_log_level))
+    logging.getLogger("asyncio").setLevel(get_log_level(asyncio_log_level))
+    logging.getLogger("sap_controller").setLevel(get_log_level(sap_controller_log_level))
+
+# Apply logging configuration
+configure_logging()
+
 # Initialize FastMCP server
 mcp = FastMCP("SAP GUI MCP Server")
 
