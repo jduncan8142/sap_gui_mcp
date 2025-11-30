@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+
 # Configure logging from environment variables
 def configure_logging():
     """Configure logging levels from environment variables."""
@@ -34,9 +35,7 @@ def configure_logging():
     # Configure root logger
     root_level = get_log_level(log_level)
     logging.basicConfig(
-        level=root_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        level=root_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # Configure individual logger levels
@@ -45,6 +44,7 @@ def configure_logging():
     logging.getLogger("mcp").setLevel(get_log_level(mcp_log_level))
     logging.getLogger("asyncio").setLevel(get_log_level(asyncio_log_level))
     logging.getLogger("sap_controller").setLevel(get_log_level(sap_controller_log_level))
+
 
 # Apply logging configuration
 configure_logging()
@@ -60,9 +60,9 @@ POLLING_INTERVAL = 0.5
 
 def create_sap_session(
     system: str,
-    client: str = None,
-    user: str = None,
-    password: str = None,
+    client: Optional[str] = None,
+    user: Optional[str] = None,
+    password: Optional[str] = None,
     language: str = "EN",
     max_wait_time: int = 30,
     login_window_wait_time: float = 1.0,
@@ -183,8 +183,7 @@ def sap_session(auto_login: bool = False) -> Optional[win32com.client.CDispatch]
     Get the current SAP session, optionally creating one if it doesn't exist.
 
     Args:
-        auto_login: If True, attempt to create a new session using environment credentials
-                   when no existing session is found (default: False)
+        auto_login: If True, attempt to create a new session using environment credentials when no existing session is found (default: False)
 
     Returns:
         SAP session object if available or created, None otherwise
@@ -234,9 +233,14 @@ def sap_session(auto_login: bool = False) -> Optional[win32com.client.CDispatch]
             if not sap_password:
                 missing.append("SAP_PASSWORD")
 
-            logger.error(
-                f"Auto-login failed: Missing required environment variables: {', '.join(missing)}"
-            )
+            logger.error(f"Auto-login failed: Missing required environment variables: {', '.join(missing)}")
+            return None
+
+        # Type narrowing: Ensure sap_system is not None before calling create_sap_session
+        # This should never happen due to validation above, but satisfies the type checker
+        if sap_system is None:
+            error_msg = "Login failed: System parameter is required"
+            logger.error(error_msg)
             return None
 
         # Create new session
@@ -299,10 +303,10 @@ def get_session_info() -> str:
 
 @mcp.tool()
 def login_to_sap(
-    system: str = None,
-    client: str = None,
-    user: str = None,
-    password: str = None,
+    system: Optional[str] = None,
+    client: Optional[str] = None,
+    user: Optional[str] = None,
+    password: Optional[str] = None,
     language: str = "EN",
     login_window_wait_time: float = 1.0,
     login_complete_wait_time: float = 2.0,
@@ -364,7 +368,14 @@ def login_to_sap(
             logger.error(error_msg)
             return error_msg
 
-    # Attempt to create session
+    # Type narrowing: Ensure sap_system is not None before calling create_sap_session
+    # This should never happen due to validation above, but satisfies the type checker
+    if sap_system is None:
+        error_msg = "Login failed: System parameter is required"
+        logger.error(error_msg)
+        return error_msg
+
+    # At this point, sap_system is guaranteed to be str (not None)
     session = create_sap_session(
         system=sap_system,
         client=sap_client,
