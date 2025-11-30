@@ -4,6 +4,7 @@ from typing import Optional
 import json
 import os
 import time
+import subprocess
 import win32com.client
 from dotenv import load_dotenv
 
@@ -56,6 +57,108 @@ logger = logging.getLogger(__name__)
 
 # Polling interval for SAP GUI operations (in seconds)
 POLLING_INTERVAL = 0.5
+
+
+def is_sap_logon_running() -> bool:
+    """
+    Check if SAP Logon (saplogon.exe) is currently running.
+
+    Returns:
+        True if SAP Logon is running, False otherwise
+    """
+    try:
+        # Try to get SAP GUI object - if it exists, SAP Logon is running
+        sap_gui = win32com.client.GetObject("SAPGUI")
+        return sap_gui is not None
+    except Exception:
+        return False
+
+
+def find_sap_logon_path() -> Optional[str]:
+    """
+    Find the SAP Logon executable path.
+
+    Returns:
+        Path to saplogon.exe if found, None otherwise
+    """
+    # Common SAP Logon installation paths
+    common_paths = [
+        r"C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe",
+        r"C:\Program Files\SAP\FrontEnd\SAPgui\saplogon.exe",
+    ]
+
+    # Check environment variable for custom SAP GUI path
+    sap_gui_path = os.getenv("SAP_LOGON_PATH")
+    if sap_gui_path and os.path.exists(sap_gui_path):
+        return sap_gui_path
+
+    # Check common installation paths
+    for path in common_paths:
+        if os.path.exists(path):
+            return path
+
+    # Try to find in PATH environment variable
+    try:
+        result = subprocess.run(
+            ["where", "saplogon.exe"], capture_output=True, text=True, timeout=5, shell=True
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip().split("\n")[0]
+    except Exception:
+        pass
+
+    return None
+
+
+def launch_sap_logon(wait_time: float = 3.0) -> tuple[bool, str]:
+    """
+    Launch SAP Logon pad if it's not already running.
+
+    Args:
+        wait_time: Time to wait (in seconds) after launching for SAP Logon to initialize
+
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
+    try:
+        # Check if SAP Logon is already running
+        if is_sap_logon_running():
+            return True, "SAP Logon is already running"
+
+        # Find SAP Logon executable
+        sap_logon_path = find_sap_logon_path()
+        if not sap_logon_path:
+            error_msg = (
+                "SAP Logon executable not found. Please install SAP GUI or set SAP_LOGON_PATH environment variable."
+            )
+            logger.error(error_msg)
+            return False, error_msg
+
+        # Launch SAP Logon
+        logger.info(f"Launching SAP Logon from: {sap_logon_path}")
+        subprocess.Popen([sap_logon_path], shell=True)
+
+        # Wait for SAP Logon to initialize
+        time.sleep(wait_time)
+
+        # Verify SAP Logon started successfully
+        max_retries = 10
+        for attempt in range(max_retries):
+            if is_sap_logon_running():
+                success_msg = f"SAP Logon launched successfully from: {sap_logon_path}"
+                logger.info(success_msg)
+                return True, success_msg
+            time.sleep(0.5)
+
+        # SAP Logon didn't start within expected time
+        error_msg = "SAP Logon was launched but failed to initialize within expected time"
+        logger.warning(error_msg)
+        return False, error_msg
+
+    except Exception as e:
+        error_msg = f"Failed to launch SAP Logon: {str(e)}"
+        logger.error(error_msg)
+        return False, error_msg
 
 
 def create_sap_session(
@@ -276,6 +379,26 @@ def sap_object_tree_as_json(session: Optional[win32com.client.CDispatch]) -> dic
     except json.JSONDecodeError as e:
         logger.error(f"Failed to decode SAP object tree: {str(e)}")
         return {"Windows": []}
+
+
+@mcp.tool()
+def start_sap_logon(wait_time: float = 3.0) -> str:
+    """
+    Launch SAP Logon pad if it's not already running.
+    This is useful for automating the complete SAP GUI workflow from scratch.
+
+    Args:
+        wait_time: Time to wait (in seconds) after launching for SAP Logon to initialize (default: 3.0)
+
+    Returns:
+        Success or error message
+    """
+    success, message = launch_sap_logon(wait_time)
+    if success:
+        logger.info(message)
+    else:
+        logger.error(message)
+    return message
 
 
 @mcp.tool()

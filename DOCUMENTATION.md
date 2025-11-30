@@ -51,158 +51,165 @@ The main server module contains:
 - **FastMCP Server Instance**: `mcp = FastMCP("SAP GUI MCP Server")`
 - **Session Management**: Enhanced `sap_session()` function with auto-login support
 - **Login Automation**: `create_sap_session()` for programmatic SAP login
+- **SAP Logon Launcher**: Automatic SAP Logon pad launching if not running
 - **Object Tree Parsing**: `sap_object_tree_as_json()` for GUI tree conversion
-- **28 MCP Tools**: Decorated with `@mcp.tool()` for client interaction (increased from 26)
+- **29 MCP Tools**: Decorated with `@mcp.tool()` for client interaction (increased from 28)
 
 ## Current Features
 
 ### Session Management Tools
 
-1. **`get_session_info()`**
+1. **`start_sap_logon(wait_time)`** ⭐ NEW
+
+   - Launches SAP Logon pad if not already running
+   - Automates the complete workflow from scratch
+   - Validates SAP Logon is ready before proceeding
+
+2. **`get_session_info()`**
 
    - Returns session metadata (User, Client, Language, System)
    - Useful for verification and debugging
 
-2. **`login_to_sap(system, client, user, password, language)`** ⭐ NEW
+3. **`login_to_sap(system, client, user, password, language)`** ⭐ NEW
 
    - Creates a new SAP session by logging in with credentials
    - Can use parameters or environment variables
    - Enables automatic session creation
 
-3. **`check_gui_busy()`**
+4. **`check_gui_busy()`**
    - Checks if SAP GUI is processing a request
    - Essential for synchronization
 
 ### Navigation Tools
 
-4. **`start_transaction(transaction_code: str)`**
+5. **`start_transaction(transaction_code: str)`**
 
    - Launches SAP transactions (e.g., SE38, VA01)
    - Core navigation functionality
 
-5. **`end_transaction()`**
+6. **`end_transaction()`**
    - Closes the current transaction
    - Clean state management
 
 ### Element Discovery Tools
 
-6. **`get_sap_gui_tree()`**
+7. **`get_sap_gui_tree()`**
 
    - Returns JSON representation of the GUI object tree
    - Critical for element identification
 
-7. **`find_by_id(element_id: str, raise_error: bool = False)`**
+8. **`find_by_id(element_id: str, raise_error: bool = False)`**
 
    - Locates GUI elements by ID
    - Primary element lookup method
 
-8. **`find_by_name(element_name: str, element_type: str)`**
+9. **`find_by_name(element_name: str, element_type: str)`**
 
    - Finds elements by name and type
    - Alternative lookup method
 
-9. **`find_all_by_name(element_name: str, element_type: str)`**
-   - Returns all matching elements
-   - Useful for repeated elements
+10. **`find_all_by_name(element_name: str, element_type: str)`**
+    - Returns all matching elements
+    - Useful for repeated elements
 
 ### Input/Output Tools
 
-10. **`set_text(element_id: str, text: str)`**
+11. **`set_text(element_id: str, text: str)`**
 
     - Sets text field values
     - Basic data entry
 
-11. **`get_text(element_id: str)`**
+12. **`get_text(element_id: str)`**
 
     - Retrieves text from fields
     - Data extraction
 
-12. **`press_button(element_id: str)`**
+13. **`press_button(element_id: str)`**
 
     - Simulates button clicks
     - User interaction
 
-13. **`set_radio_button(element_id: str, selected: bool)`**
+14. **`set_radio_button(element_id: str, selected: bool)`**
 
     - Selects radio buttons
     - Form interaction
 
-14. **`set_checkbox(element_id: str, state: bool)`**
+15. **`set_checkbox(element_id: str, state: bool)`**
 
     - Sets checkbox state
     - Boolean input
 
-15. **`set_combobox(element_id: str, key: str)`**
+16. **`set_combobox(element_id: str, key: str)`**
 
     - Sets dropdown/combobox values
     - Selection input
 
-16. **`set_focus(element_id: str)`**
+17. **`set_focus(element_id: str)`**
     - Sets focus to an element
     - Interaction preparation
 
 ### Command Execution Tools
 
-17. **`send_command(command: str)`**
+18. **`send_command(command: str)`**
 
     - Sends synchronous commands to SAP
     - Direct SAP command execution
 
-18. **`send_command_async(command: str)`**
+19. **`send_command_async(command: str)`**
     - Sends asynchronous commands
     - Non-blocking operations
 
 ### Grid Control Tools
 
-19. **`get_grid_data(element_id: str)`**
+20. **`get_grid_data(element_id: str)`**
 
     - Extracts all data from grid controls (ALV tables)
     - Returns columns, rows, and cell values
     - Critical for data extraction
 
-20. **`get_grid_cell_value(element_id: str, row: int, column: int)`**
+21. **`get_grid_cell_value(element_id: str, row: int, column: int)`**
 
     - Retrieves specific cell value
     - Targeted data access
 
-21. **`select_grid_row(element_id: str, row: int)`**
+22. **`select_grid_row(element_id: str, row: int)`**
 
     - Selects a specific row in grid
     - Row manipulation
 
-22. **`get_selected_grid_rows(element_id: str)`**
+23. **`get_selected_grid_rows(element_id: str)`**
 
     - Returns data from selected rows
     - Batch data extraction
 
-23. **`double_click_grid_cell(element_id: str, row: int, column: int)`**
+24. **`double_click_grid_cell(element_id: str, row: int, column: int)`**
     - Double-clicks cell to drill down
     - Navigation within grids
 
 ### Scrollbar Management Tools
 
-24. **`get_vertical_scrollbar_position(element_id: str)`**
+25. **`get_vertical_scrollbar_position(element_id: str)`**
 
     - Gets vertical scroll position
     - Grid navigation state
 
-25. **`set_vertical_scrollbar_position(element_id: str, position: int)`**
+26. **`set_vertical_scrollbar_position(element_id: str, position: int)`**
 
     - Sets vertical scroll position
     - Grid navigation control
 
-26. **`get_horizontal_scrollbar_position(element_id: str)`** ✅ FIXED
+27. **`get_horizontal_scrollbar_position(element_id: str)`** ✅ FIXED
 
     - Gets horizontal scroll position
     - Now properly exposed with `@mcp.tool()` decorator
 
-27. **`set_horizontal_scrollbar_position(element_id: str, position: int)`**
+28. **`set_horizontal_scrollbar_position(element_id: str, position: int)`**
     - Sets horizontal scroll position
     - Wide grid navigation
 
 ### Window Management Tools
 
-28. **`maximize_window()`**
+29. **`maximize_window()`**
     - Maximizes the active SAP window
     - Screen optimization
 
@@ -272,6 +279,9 @@ SAP_PASSWORD=your_password     # SAP password (not required if using SSO)
 SAP_LANGUAGE=EN                # SAP language code (EN, DE, FR, etc.)
 SAP_USE_SSO=false              # Use Windows Single Sign-On (true/false)
 
+# SAP Logon Path (optional - auto-detected if not specified) ⭐ NEW
+# SAP_LOGON_PATH=C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe
+
 # Logging Levels (DEBUG, INFO, WARNING, ERROR, CRITICAL) ⭐ NOW ACTIVE
 LOG_LEVEL=ERROR                # Root logger level
 SERVER_LOG_LEVEL=ERROR         # Server logger level
@@ -291,6 +301,14 @@ SAP_CONTROLLER_LOG_LEVEL=ERROR # SAP Controller logger level
   - Uses your Windows login credentials automatically
   - Only requires `SAP_SYSTEM` (and optionally `SAP_CLIENT`)
   - Call `login_to_sap(use_sso=True)` to use SSO authentication
+
+**SAP Logon Configuration ⭐ NEW**:
+
+- **SAP_LOGON_PATH**: Optional path to saplogon.exe
+  - Auto-detects standard installation locations if not specified
+  - Checks: `C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe`
+  - Also checks: `C:\Program Files\SAP\FrontEnd\SAPgui\saplogon.exe`
+  - Falls back to searching Windows PATH
 
 **Logging Configuration ⭐ NEW**:
 
@@ -338,9 +356,32 @@ SAP_CONTROLLER_LOG_LEVEL=DEBUG
 4. **Call `login_to_sap(use_sso=True)`** - uses Windows credentials
 5. **Use tools** to interact with SAP GUI
 
+#### Option D: Fully Automated Workflow ⭐ NEW
+
+1. **Configure `.env` file** with SAP credentials or SSO
+2. **Launch the MCP server**: `python src/server.py`
+3. **Connect MCP client** (e.g., Claude Desktop)
+4. **Call `start_sap_logon()`** - launches SAP Logon if needed
+5. **Call `login_to_sap()`** - creates session automatically
+6. **Use tools** to interact with SAP GUI
+
+This option provides complete automation from a cold start with no manual steps required!
+
 ### Example Use Cases
 
-#### 1. Auto-Login to SAP
+#### 1. Launch SAP Logon Pad ⭐ NEW
+
+```python
+# Launch SAP Logon if not already running
+start_sap_logon()
+# Returns: "SAP Logon launched successfully from: C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"
+
+# Or with custom wait time
+start_sap_logon(wait_time=5.0)
+# Returns: Success message or error if SAP Logon fails to start
+```
+
+#### 2. Auto-Login to SAP
 
 ```python
 # Option A: Login using environment credentials
@@ -361,7 +402,7 @@ login_to_sap(system="PRD", client="100", use_sso=True)
 # Returns: Session info using Windows login
 ```
 
-#### 2. Session Verification
+#### 3. Session Verification
 
 ```python
 # Check current session
@@ -369,7 +410,7 @@ get_session_info()
 # Returns: SessionId, User, Client, Language, SystemName, SystemNumber
 ```
 
-#### 3. Transaction Navigation
+#### 4. Transaction Navigation
 
 ```python
 # Start a transaction
@@ -382,7 +423,7 @@ start_transaction("SE38")
 end_transaction()
 ```
 
-#### 3. Data Entry
+#### 5. Data Entry
 
 ```python
 # Get GUI tree to find element IDs
@@ -397,7 +438,7 @@ set_combobox("wnd[0]/usr/cmbVARI-MONTH", "01")
 press_button("wnd[0]/usr/btnEXECUTE")
 ```
 
-#### 4. Grid Data Extraction
+#### 6. Grid Data Extraction
 
 ```python
 # Extract all data from a grid
@@ -408,6 +449,17 @@ select_grid_row("wnd[0]/usr/cntlGRID1/shellcont/shell", 5)
 
 # Get selected rows data
 selected_data = get_selected_grid_rows("wnd[0]/usr/cntlGRID1/shellcont/shell")
+```
+
+#### 7. Complete Automation from Scratch ⭐ NEW
+
+```python
+# Complete workflow with zero manual steps
+start_sap_logon()                  # Launch SAP Logon if needed
+login_to_sap()                     # Login using environment credentials
+start_transaction("SE38")          # Navigate to transaction
+# ... perform your automated tasks ...
+end_transaction()                  # Clean up
 ```
 
 ## Development History
@@ -440,15 +492,16 @@ b187ffc - Initial Commit 20250930
 ### Platform Limitations
 
 1. **Windows Only**: Requires Windows OS due to COM interface dependency
-2. **SAP GUI Required**: Must have SAP GUI application installed (but can now auto-login)
+2. **SAP GUI Required**: Must have SAP GUI application installed (can now auto-launch and auto-login)
 3. **Single Session**: Currently connects to first available session (`Connections[0].Sessions[0]`)
 
 ### Functional Gaps (Reduced) ✅
 
 1. ~~**No Authentication**: No automatic login capability (credentials unused)~~ **FIXED - Auto-login now available**
 2. ~~**No Session Creation**: Assumes existing SAP session~~ **FIXED - Can create sessions via login_to_sap()**
-3. **Limited Error Recovery**: Basic error handling without retry logic
-4. **Single Window Focus**: Primarily works with active window
+3. ~~**No SAP Logon Launcher**: Cannot start SAP GUI automatically~~ **FIXED - Can launch via start_sap_logon()**
+4. **Limited Error Recovery**: Basic error handling without retry logic
+5. **Single Window Focus**: Primarily works with active window
 
 ## Security Considerations
 
@@ -472,10 +525,11 @@ b187ffc - Initial Commit 20250930
 
 ### Manual Testing Steps
 
-1. Start SAP GUI and log into a system
+1. (Optional) Close SAP GUI if running to test full automation
 2. Run the MCP server: `python src/server.py`
 3. Connect an MCP client
 4. Test basic tools:
+   - `start_sap_logon()` - Launch SAP Logon (if not running)
    - `login_to_sap()` - Create new session
    - `get_session_info()` - Verify connection
    - `get_sap_gui_tree()` - Check GUI parsing
@@ -487,9 +541,11 @@ b187ffc - Initial Commit 20250930
 - [ ] SAP GUI scripting enabled
 - [ ] Python 3.13+ available
 - [ ] pywin32 properly installed
-- [ ] SAP session active before server start
+- [ ] SAP GUI installed (will be auto-launched if needed)
 - [ ] MCP server starts without errors
 - [ ] Client can connect and list tools
+- [ ] `start_sap_logon()` successfully launches SAP Logon
+- [ ] `login_to_sap()` creates sessions automatically
 
 ## Future Enhancements
 
