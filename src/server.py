@@ -6,7 +6,7 @@ import win32com.client
 from logging import getLogger
 
 from sap.logon_pad import launch_sap_logon, sap_session, create_sap_session, get_system_language
-from sap.gui import sap_object_tree_as_json
+from sap.gui import sap_object_tree_as_json, capture_screenshot
 
 # Initialize FastMCP server
 mcp = FastMCP("SAP GUI MCP Server")
@@ -885,6 +885,28 @@ def set_combobox(element_id: str, key: str) -> str:
         error_msg = f"Failed to set combo box with element ID '{element_id}': {str(e)}"
         logger.error(error_msg)
         return error_msg
+
+
+@mcp.tool()
+def take_screenshot(output_path: Optional[str] = None, window_id: Optional[str] = None) -> str:
+    """
+    Capture a screenshot of the SAP GUI window for documentation purposes.
+
+    Args:
+        output_path: Optional path where the screenshot should be saved (e.g., "C:\\screenshots\\my_screenshot.png").
+                    If not provided, saves to "./screenshots/sap_screenshot_YYYYMMDD_HHMMSS.png"
+        window_id: Optional ID of the specific window to capture (e.g., "wnd[0]", "wnd[1]").
+                  If not provided, captures the currently active window.
+
+    Returns:
+        Success message with file path or error message
+    """
+    success, message = capture_screenshot(output_path=output_path, window_id=window_id)
+    if success:
+        logger.info(message)
+    else:
+        logger.error(message)
+    return message
 
 
 if __name__ == "__main__":

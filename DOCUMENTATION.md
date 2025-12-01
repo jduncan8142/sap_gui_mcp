@@ -53,7 +53,8 @@ The main server module contains:
 - **Login Automation**: `create_sap_session()` for programmatic SAP login
 - **SAP Logon Launcher**: Automatic SAP Logon pad launching if not running
 - **Object Tree Parsing**: `sap_object_tree_as_json()` for GUI tree conversion
-- **29 MCP Tools**: Decorated with `@mcp.tool()` for client interaction (increased from 28)
+- **Screenshot Capture**: `capture_screenshot()` for capturing SAP GUI screens
+- **30 MCP Tools**: Decorated with `@mcp.tool()` for client interaction (increased from 29)
 
 ## Current Features
 
@@ -212,6 +213,14 @@ The main server module contains:
 29. **`maximize_window()`**
     - Maximizes the active SAP window
     - Screen optimization
+
+### Documentation Tools
+
+30. **`take_screenshot(output_path, window_id)`** ⭐ NEW
+    - Captures screenshots of SAP GUI windows
+    - Supports custom output paths and specific window selection
+    - Automatically creates screenshots directory
+    - Saves in PNG format for documentation
 
 ## Dependencies
 
@@ -462,6 +471,30 @@ start_transaction("SE38")          # Navigate to transaction
 end_transaction()                  # Clean up
 ```
 
+#### 8. Screenshot Capture ⭐ NEW
+
+```python
+# Capture the active window with automatic file naming
+take_screenshot()
+# Returns: "Screenshot saved successfully to: ./screenshots/sap_screenshot_20251130_143025.png"
+
+# Capture with custom path
+take_screenshot(output_path="C:\\docs\\my_transaction.png")
+# Returns: "Screenshot saved successfully to: C:\docs\my_transaction.png"
+
+# Capture a specific window
+take_screenshot(window_id="wnd[1]")
+# Returns: Screenshot of secondary window saved
+
+# Capture during transaction for documentation
+start_transaction("VA01")
+# ... interact with the screen ...
+take_screenshot(output_path="C:\\docs\\va01_step1.png")
+# ... continue transaction steps ...
+take_screenshot(output_path="C:\\docs\\va01_step2.png")
+end_transaction()
+```
+
 ## Development History
 
 ### Recent Commits
@@ -557,7 +590,7 @@ b187ffc - Initial Commit 20250930
 4. ~~**Logging Configuration**: Use the defined log levels from environment~~ **IMPLEMENTED**
 5. ~~**Missing Decorator**: Add `@mcp.tool()` to `get_horizontal_scrollbar_position()`~~ **IMPLEMENTED**
 6. **Transaction Automation**: High-level wrappers for common SAP tasks
-7. **Screenshot Capability**: Capture SAP GUI screens for documentation
+7. ~~**Screenshot Capability**: Capture SAP GUI screens for documentation~~ **IMPLEMENTED**
 8. **Recording/Playback**: Record user actions for script generation
 9. **Validation Tools**: Pre-flight checks for SAP connectivity
 10. **Documentation**: Add API documentation with examples for each tool

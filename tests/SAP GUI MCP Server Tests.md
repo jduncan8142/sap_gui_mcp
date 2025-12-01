@@ -3,9 +3,10 @@
 ## Notes
 
 Below is a list of test cases to execute and test the functionality of the SAP GUI MCP Server.
-Run them in order and report the status of each as PASS or FAIL, include a screenshot of the resulting desktop for each step.
+Run them in order and report the status of each as PASS or FAIL, include a screenshot using the capture_screenshot tool of the results for each step.
 If a step fails stop execution of the test cases and include any applicable logs.
-Only use the SAP GUI MCP server for these tests, except for verifying results, taking screenshots, and capturing logs. For verification, screenshots, and logs you can use any MCP servers required.
+Only use the SAP GUI MCP server for these tests, except for verifying results and capturing logs.
+For verification, screenshots, and logs you can use any MCP servers required.
 When I ask you to run the test cases for the SAP GUI MCP Server these are the test cases you should us.
 Treat each case as if a user was entering it in a new chat prompt to you and the SAP GUI MCP Server was the only available tool.
 Check back here each time for any new cases that may have been added.

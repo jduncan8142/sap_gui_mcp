@@ -181,3 +181,6 @@ example_prompts.md
 get_zspro_nodes.py
 import_transport.py
 test_sap_logon.py
+
+# Screenshot output directory
+screenshots/
