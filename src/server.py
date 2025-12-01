@@ -5,6 +5,7 @@ import os
 import win32com.client
 from logging import getLogger
 
+from sap.export_data import export_grid_as_csv
 from sap.logon_pad import launch_sap_logon, sap_session, create_sap_session, get_system_language
 from sap.gui import sap_object_tree_as_json, capture_screenshot
 
@@ -903,6 +904,35 @@ def take_screenshot(output_path: Optional[str] = None, window_id: Optional[str] 
     """
     success, message = capture_screenshot(output_path=output_path, window_id=window_id)
     if success:
+        logger.info(message)
+    else:
+        logger.error(message)
+    return message
+
+
+@mcp.tool()
+def export_grid_data_as_csv(
+    grid_id: str,
+    session: Optional[win32com.client.CDispatch] = None,
+    output_path: Optional[str] = None,
+    identifier: Optional[str] = None,
+) -> str:
+    """
+    Export SAP GUI grid data to a CSV file.
+
+    Args:
+        grid_id: SAP GUI element ID of the grid to export.
+        output_path: Path where the exported CSV should be saved. If None, generates a default path.
+        session: SAP session object. If None, uses the current session.
+        identifier: Optional identifier or name for the export operation, such as transaction code or table name. Will be included in the filename if provided.
+
+    Returns:
+        tuple[str, str]: String for 'file_path' on success or an empty string on failure and 'error' message if any otherwise an empty string.
+    """
+    export_path, message = export_grid_as_csv(
+        grid_id=grid_id, session=session, output_path=output_path, identifier=identifier
+    )
+    if export_path:
         logger.info(message)
     else:
         logger.error(message)

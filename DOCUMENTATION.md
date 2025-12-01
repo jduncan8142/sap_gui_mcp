@@ -54,7 +54,7 @@ The main server module contains:
 - **SAP Logon Launcher**: Automatic SAP Logon pad launching if not running
 - **Object Tree Parsing**: `sap_object_tree_as_json()` for GUI tree conversion
 - **Screenshot Capture**: `capture_screenshot()` for capturing SAP GUI screens
-- **30 MCP Tools**: Decorated with `@mcp.tool()` for client interaction (increased from 29)
+- **31 MCP Tools**: Decorated with `@mcp.tool()` for client interaction (increased from 30)
 
 ## Current Features
 
@@ -187,36 +187,43 @@ The main server module contains:
     - Double-clicks cell to drill down
     - Navigation within grids
 
+25. **`export_grid_data_as_csv(grid_id: str, output_path: Optional[str], identifier: Optional[str])`** ⭐ NEW
+    - Exports grid data to CSV file format
+    - Automatically generates timestamped filenames
+    - Creates export directory if needed
+    - Supports custom file paths and identifiers
+    - Returns confirmation message with file location
+
 ### Scrollbar Management Tools
 
-25. **`get_vertical_scrollbar_position(element_id: str)`**
+26. **`get_vertical_scrollbar_position(element_id: str)`**
 
     - Gets vertical scroll position
     - Grid navigation state
 
-26. **`set_vertical_scrollbar_position(element_id: str, position: int)`**
+27. **`set_vertical_scrollbar_position(element_id: str, position: int)`**
 
     - Sets vertical scroll position
     - Grid navigation control
 
-27. **`get_horizontal_scrollbar_position(element_id: str)`** ✅ FIXED
+28. **`get_horizontal_scrollbar_position(element_id: str)`** ✅ FIXED
 
     - Gets horizontal scroll position
     - Now properly exposed with `@mcp.tool()` decorator
 
-28. **`set_horizontal_scrollbar_position(element_id: str, position: int)`**
+29. **`set_horizontal_scrollbar_position(element_id: str, position: int)`**
     - Sets horizontal scroll position
     - Wide grid navigation
 
 ### Window Management Tools
 
-29. **`maximize_window()`**
+30. **`maximize_window()`**
     - Maximizes the active SAP window
     - Screen optimization
 
 ### Documentation Tools
 
-30. **`take_screenshot(output_path, window_id)`** ⭐ NEW
+31. **`take_screenshot(output_path, window_id)`** ⭐ NEW
     - Captures screenshots of SAP GUI windows
     - Supports custom output paths and specific window selection
     - Automatically creates screenshots directory
@@ -458,6 +465,20 @@ select_grid_row("wnd[0]/usr/cntlGRID1/shellcont/shell", 5)
 
 # Get selected rows data
 selected_data = get_selected_grid_rows("wnd[0]/usr/cntlGRID1/shellcont/shell")
+
+# Export grid data to CSV file ⭐ NEW
+export_grid_data_as_csv(
+    grid_id="wnd[0]/usr/cntlGRID1/shellcont/shell"
+)
+# Returns: "export saved successfully to: ./exports/export_20251130_143025.csv"
+
+# Export with custom path and identifier
+export_grid_data_as_csv(
+    grid_id="wnd[0]/usr/cntlGRID1/shellcont/shell",
+    output_path="C:\\reports\\sales_data.csv",
+    identifier="VA05_sales_orders"
+)
+# Returns: "export saved successfully to: C:\reports\sales_data.csv"
 ```
 
 #### 7. Complete Automation from Scratch ⭐ NEW
@@ -492,6 +513,35 @@ start_transaction("VA01")
 take_screenshot(output_path="C:\\docs\\va01_step1.png")
 # ... continue transaction steps ...
 take_screenshot(output_path="C:\\docs\\va01_step2.png")
+end_transaction()
+```
+
+#### 9. Complete Data Export Workflow ⭐ NEW
+
+```python
+# Complete example: Extract and export sales orders
+start_sap_logon()                           # Launch SAP Logon
+login_to_sap()                              # Login with credentials
+start_transaction("VA05")                   # Sales order list transaction
+
+# Enter search criteria
+set_text("wnd[0]/usr/ctxtVBAK-KUNNR", "12345")  # Customer number
+press_button("wnd[0]/tbar[1]/btn[8]")          # Execute
+
+# Wait for grid to load
+check_gui_busy()
+
+# Capture screenshot for documentation
+take_screenshot(output_path="C:\\reports\\va05_results.png")
+
+# Export the results to CSV
+export_grid_data_as_csv(
+    grid_id="wnd[0]/usr/cntlGRID1/shellcont/shell",
+    output_path="C:\\reports\\sales_orders.csv",
+    identifier="customer_12345"
+)
+# Returns: "export saved successfully to: C:\reports\sales_orders.csv"
+
 end_transaction()
 ```
 
@@ -667,6 +717,6 @@ The logging system is now fully configurable via environment variables without c
 
 ---
 
-**Last Updated**: 2025-11-29
-**Document Version**: 1.0
+**Last Updated**: 2025-11-30
+**Document Version**: 1.1
 **Project Status**: Active Development

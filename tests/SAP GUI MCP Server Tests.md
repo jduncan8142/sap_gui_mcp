@@ -23,5 +23,6 @@ Name the screenshots like TC\<x\>\_\<yyyymmdd\>\_\<hhmmss\>\_\<PASS / FAIL\>.jpe
    - Distribution Channel: 50
    - Division: 50
    - Open Orders: true
-5. Execute ZVA05N and capture the first 5 sales order numbers.
-6. Return to the main menu.
+5. Execute ZVA05N using F8.
+6. Capture the ZVA05N results by taking a screenshot.
+7. Return to the main menu.
