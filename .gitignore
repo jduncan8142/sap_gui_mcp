@@ -177,3 +177,7 @@ example_prompts.txt
 
 # User-specific stuff:
 .claude
+example_prompts.md
+get_zspro_nodes.py
+import_transport.py
+test_sap_logon.py

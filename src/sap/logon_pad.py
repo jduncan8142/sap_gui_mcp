@@ -112,7 +112,8 @@ def launch_sap_logon(wait_time: float = WAIT_TIME, max_retries: int = MAX_RETRIE
 
         # Launch SAP Logon
         logger.info(f"Launching SAP Logon from: {sap_logon_path}")
-        subprocess.Popen([sap_logon_path], shell=True)
+        # subprocess.Popen([sap_logon_path])
+        os.startfile(sap_logon_path)
 
         # Wait for SAP Logon to initialize
         time.sleep(wait_time)
