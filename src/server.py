@@ -913,7 +913,6 @@ def take_screenshot(output_path: Optional[str] = None, window_id: Optional[str] 
 @mcp.tool()
 def export_grid_data_as_csv(
     grid_id: str,
-    session: Optional[win32com.client.CDispatch] = None,
     output_path: Optional[str] = None,
     identifier: Optional[str] = None,
 ) -> str:
@@ -923,14 +922,13 @@ def export_grid_data_as_csv(
     Args:
         grid_id: SAP GUI element ID of the grid to export.
         output_path: Path where the exported CSV should be saved. If None, generates a default path.
-        session: SAP session object. If None, uses the current session.
         identifier: Optional identifier or name for the export operation, such as transaction code or table name. Will be included in the filename if provided.
 
     Returns:
-        tuple[str, str]: String for 'file_path' on success or an empty string on failure and 'error' message if any otherwise an empty string.
+        Success message with file path or error message
     """
     export_path, message = export_grid_as_csv(
-        grid_id=grid_id, session=session, output_path=output_path, identifier=identifier
+        grid_id=grid_id, session=None, output_path=output_path, identifier=identifier
     )
     if export_path:
         logger.info(message)
